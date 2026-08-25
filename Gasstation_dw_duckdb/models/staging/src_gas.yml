@@ -1,0 +1,23 @@
+version: 2
+
+sources:
+  - name: gas_station_raw
+    description: "Raw OLTP data for the gas station chain, loaded via dbt seed / duckdb"
+    schema: main          # เปลี่ยนเป็นชื่อ schema จริงถ้าไม่ได้ใช้ main
+    tables:
+      - name: customer
+        description: "Registered customers and their vehicles"
+      - name: employee
+        description: "Staff assigned to each gas station"
+      - name: gasstation
+        description: "Branch/station master data"
+      - name: product
+        description: "Sellable fuel grades and products"
+      - name: invoice
+        description: "Sales transaction header"
+      - name: invoicedetail
+        description: "Sales transaction line items"
+      - name: inventorytransaction
+        description: "Tank stock movement events"
+      - name: storagetank
+        description: "Physical fuel tanks per station"
