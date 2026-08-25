@@ -1,4 +1,4 @@
-# ⛽ GasStationDB - Data Warehouse & Business Intelligence Project
+# GasStationDB - Data Warehouse & Business Intelligence Project
 > **Repository:** Gasstation_KRK  
 > **Group:** Project Group 1
 
@@ -19,7 +19,7 @@
 
 ---
 
-## 1. 🗄️ Operational Database (OLTP)
+## 1. Operational Database (OLTP)
 
 * **ชุดข้อมูลต้นทาง:** GasStationDB (HCM City - PostgreSQL) จาก Kaggle
 * **บริบทของระบบ:** ระบบบันทึกธุรกรรมการขายน้ำมันประจำวัน การจัดการคลังน้ำมัน หัวจ่าย พนักงาน และลูกค้า
@@ -29,9 +29,9 @@
 
 ---
 
-## 2. ❓ Business Questions (15 ข้อ)
+## 2.  Business Questions (15 ข้อ)
 
-### 📌 ด้านยอดขายและรายได้ (`invoice`, `invoicedetail`)
+### ด้านยอดขายและรายได้ (`invoice`, `invoicedetail`)
 
 1. รายได้รวม (`totalamount`) แยกตามสาขา (`gasstationid`) ในแต่ละเดือนเป็นเท่าไหร่?
 
@@ -43,7 +43,7 @@
 
 <br>
 
-### 📌 ด้านลูกค้า (`customer`)
+### ด้านลูกค้า (`customer`)
 
 5. ลูกค้ารายใดซื้อบ่อยที่สุด/มีมูลค่าซื้อสะสมสูงสุด (จาก `customerid` เชื่อมกับ `invoice`)
 
@@ -53,7 +53,7 @@
 
 <br>
 
-### 📌 ด้านพนักงาน (`employee`)
+### ด้านพนักงาน (`employee`)
 
 8. พนักงานคนใด (`employeeid`) ปิดยอดขาย (`totalamount`) ได้สูงสุดในแต่ละเดือน?
 
@@ -61,7 +61,7 @@
 
 <br>
 
-### 📌 ด้านสต๊อกและถังเก็บน้ำมัน (`product`, `storagetank`, `inventorytransaction`)
+### ด้านสต๊อกและถังเก็บน้ำมัน (`product`, `storagetank`, `inventorytransaction`)
 
 10. ปริมาณน้ำมันคงเหลือ (`currentquantity`) ในแต่ละถัง (`tankid`) ใกล้ถึงจุดต่ำสุดที่ต้องสั่งเติมหรือยัง?
 
@@ -73,7 +73,7 @@
 
 <br>
 
-### 📌 ด้านสาขา/ภาพรวมธุรกิจ (`gasstation`)
+### ด้านสาขา/ภาพรวมธุรกิจ (`gasstation`)
 
 14. สาขา (`gasstationid`) ใดทำรายได้สูงสุด/ต่ำสุด เมื่อเทียบกันในแต่ละช่วงเวลา?
 
@@ -81,7 +81,7 @@
 
 ---
 
-## 3. 📐 Multidimensional Data Model Design
+## 3. Multidimensional Data Model Design
 
 การออกแบบคลังข้อมูลในรูปแบบ **Star Schema** ประกอบด้วย:
 
