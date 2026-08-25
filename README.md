@@ -25,7 +25,7 @@
 * **บริบทของระบบ:** ระบบบันทึกธุรกรรมการขายน้ำมันประจำวัน การจัดการคลังน้ำมัน หัวจ่าย พนักงาน และลูกค้า
 * **ER Diagram ต้นทาง:**
 
-![Operational ER Diagram](docs/oltp_er_diagram.png)
+![Operational ER Diagram](ER_gas.drawio.png)
 
 ---
 
