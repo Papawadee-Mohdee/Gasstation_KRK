@@ -1,0 +1,6 @@
+ProductID,ProductName,UnitPrice,ProductType,Supplier,StockQuantity
+1,RON95-III,23830,Gasoline,Supplier A,100000
+2,E5 RON92-II,22910,Gasoline,Supplier B,80000
+3,"DO 0,001S-V",20790,Diesel,Supplier C,60000
+4,Engine Oil,100000,Lubricant,Supplier D,1000
+5,Brake Fluid,80000,Lubricant,Supplier E,500
