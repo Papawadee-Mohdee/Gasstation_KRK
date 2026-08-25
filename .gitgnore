@@ -1,0 +1,20 @@
+# Python Virtual Environment
+.venv/
+
+# Python Cache
+__pycache__/
+*.pyc
+
+# dbt Logs
+logs/
+target/
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
+
+# Environment Variables
+.env
