@@ -109,10 +109,10 @@
 pip install -r requirements.txt
 
 # 2. รัน dbt แปลงข้อมูล
-cd Gasstation_dw_duckdb
-dbt run
+* cd Gasstation_dw_duckdb
+* dbt run
 
 # 3. รัน Web Application Launch Interactive Business Dashboard
-streamlit run app.py
-streamlit run dashboard_app.py
+* streamlit run app.py
+* streamlit run dashboard_app.py
 ---
