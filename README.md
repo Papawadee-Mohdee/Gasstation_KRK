@@ -99,3 +99,20 @@
 * **`Dim_Date`**: `Date_Key` -> `Day` -> `Month` -> `Quarter` -> `Year`
 
 ---
+
+## 4. กระบวนการ ELT & ขั้นตอนการติดตั้งใช้งาน (ELT Process & Setup)
+
+การทำ Transform ด้วย dbt: อธิบายการแปลงข้อมูลจาก staging ไปสู่ datawarehouse
+
+คำสั่งการรันโปรเจกต์:
+# 1. ติดตั้ง Library
+pip install -r requirements.txt
+
+# 2. รัน dbt แปลงข้อมูล
+cd Gasstation_dw_duckdb
+dbt run
+
+# 3. รัน Web Application Launch Interactive Business Dashboard
+streamlit run app.py
+streamlit run dashboard_app.py
+---
