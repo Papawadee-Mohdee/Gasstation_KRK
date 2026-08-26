@@ -1,0 +1,162 @@
+version: 2
+
+models:
+  - name: dim_date
+    description: "Conformed date dimension, generated from the date range observed in fact_sales and fact_inventory. Shared by both fact tables."
+    columns:
+      - name: date_key
+        description: "Surrogate key in YYYYMMDD integer format"
+        tests:
+          - unique
+          - not_null
+      - name: full_date
+        description: "Calendar date"
+        tests:
+          - not_null
+      - name: year
+        description: "Calendar year"
+      - name: quarter
+        description: "Calendar quarter (1-4)"
+      - name: month
+        description: "Calendar month number (1-12)"
+      - name: month_name
+        description: "Full month name"
+      - name: day_of_month
+        description: "Day of month (1-31)"
+      - name: iso_day_of_week
+        description: "ISO day of week (1=Monday ... 7=Sunday)"
+      - name: day_name
+        description: "Full weekday name"
+      - name: is_weekend
+        description: "True if Saturday or Sunday"
+
+  - name: dim_time
+    description: "Hour-of-day dimension (0-23), since source transactions are captured at hourly grain."
+    columns:
+      - name: time_key
+        description: "Surrogate key = hour of day (0-23)"
+        tests:
+          - unique
+          - not_null
+      - name: hour_24
+        description: "Hour in 24-hour format"
+      - name: day_part
+        description: "Human-readable time segment (Morning/Midday/Afternoon/Evening/Night)"
+
+  - name: dim_customer
+    description: "One row per registered customer, with conformed vehicle category."
+    columns:
+      - name: customer_key
+        description: "Surrogate key (reuses natural key, no SCD needed)"
+        tests:
+          - unique
+          - not_null
+      - name: customer_id
+        description: "Natural key from source Customer table"
+        tests:
+          - not_null
+      - name: customer_name
+        tests:
+          - not_null
+      - name: address
+      - name: phone_number
+      - name: email
+      - name: vehicle_type
+        description: "Raw vehicle type from source (e.g. Sedan, SUV, Motorcycle 125cc)"
+      - name: vehicle_category
+        description: "Conformed grouping: Motorcycle / Passenger Car / Truck / Other"
+        tests:
+          - accepted_values:
+              values: ['Motorcycle', 'Passenger Car', 'Truck', 'Other']
+      - name: license_plate
+
+  - name: dim_employee
+    description: "One row per staff member and their home gas station."
+    columns:
+      - name: employee_key
+        tests:
+          - unique
+          - not_null
+      - name: employee_id
+        tests:
+          - not_null
+      - name: employee_name
+        tests:
+          - not_null
+      - name: position
+        description: "Job role: Manager, Cashier, Pump Attendant, Maintenance"
+      - name: home_gasstation_id
+        tests:
+          - relationships:
+              to: ref('dim_gasstation')
+              field: gasstation_id
+      - name: phone_number
+      - name: email
+      - name: start_date
+
+  - name: dim_gasstation
+    description: "One row per branch/station."
+    columns:
+      - name: gasstation_key
+        tests:
+          - unique
+          - not_null
+      - name: gasstation_id
+        tests:
+          - not_null
+      - name: gasstation_name
+        tests:
+          - not_null
+      - name: address
+      - name: phone_number
+      - name: email
+
+  - name: dim_product
+    description: "One row per sellable product / fuel grade."
+    columns:
+      - name: product_key
+        tests:
+          - unique
+          - not_null
+      - name: product_id
+        tests:
+          - not_null
+      - name: product_name
+        tests:
+          - not_null
+      - name: product_type
+      - name: supplier
+      - name: list_unit_price
+
+  - name: dim_paymentmethod
+    description: "Small dimension for payment channel, surrogate key generated since source has no natural ID."
+    columns:
+      - name: paymentmethod_key
+        tests:
+          - unique
+          - not_null
+      - name: payment_method
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['Cash', 'Credit Card']
+
+  - name: dim_tank
+    description: "One row per physical storage tank. Snowflaked to dim_gasstation via gasstation_id."
+    columns:
+      - name: tank_key
+        tests:
+          - unique
+          - not_null
+      - name: tank_id
+        tests:
+          - not_null
+      - name: gasstation_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_gasstation')
+              field: gasstation_id
+      - name: tank_name
+      - name: material_type
+      - name: capacity_liters
