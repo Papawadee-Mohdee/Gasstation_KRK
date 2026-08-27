@@ -76,8 +76,9 @@ Gasstation_KRK/
     │       ├── fact_sales.sql
     │       └── fact_inventory.sql
     │
-    └── app.py                          # Streamlit dashboard
-  ```
+    ├── app.py                          # Streamlit: Database Inspector (dev tool)
+    └── dashboard_app.py                # Streamlit: Executive Dashboard (ตอบ 15 คำถามธุรกิจ)
+```
 ---
 
 ## 3.Business Questions (15 ข้อ)
