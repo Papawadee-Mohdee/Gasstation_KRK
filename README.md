@@ -30,22 +30,54 @@
 
 ---
 
-## 2. กระบวนการ ELT & ขั้นตอนการติดตั้งใช้งาน (ELT Process & Setup)
+## 2. กระบวนการ ELT
 
-การทำ Transform ด้วย dbt: อธิบายการแปลงข้อมูลจาก staging ไปสู่ datawarehouse
+โครงสร้างโปรเจกต์ทั้งหมด
 
-คำสั่งการรันโปรเจกต์:
-# 1. ติดตั้ง Library
-pip install -r requirements.txt
-
-# 2. รัน dbt แปลงข้อมูล
-* cd Gasstation_dw_duckdb
-* dbt run
-
-# 3. รัน Web Application Launch Interactive Business Dashboard
-* streamlit run app.py
-* streamlit run dashboard_app.py
-  
+```
+Gasstation_KRK/
+└── Gasstation_dw_duckdb/
+    ├── dbt_project.yml
+    ├── profiles.yml                    # หรืออยู่ที่ ~/.dbt/profiles.yml
+    ├── dev.duckdb                      # ไฟล์ฐานข้อมูลจริง (สร้างอัตโนมัติตอนรันครั้งแรก)
+    │
+    ├── Datasets/                       # ไฟล์ CSV ต้นทาง 8 ไฟล์
+    │   ├── Customer.csv
+    │   ├── Employee.csv
+    │   ├── GasStation.csv
+    │   ├── Product.csv
+    │   ├── Invoice.csv
+    │   ├── InvoiceDetail.csv
+    │   ├── StorageTank.csv
+    │   └── InventoryTransaction.csv
+    │
+    ├── models/
+    │   ├── staging/
+    │   │   ├── src_gas.yml             # ประกาศ source (ชี้ไปที่ CSV)
+    │   │   ├── stg_Customer.sql
+    │   │   ├── stg_Employee.sql
+    │   │   ├── stg_GasStation.sql
+    │   │   ├── stg_Product.sql
+    │   │   ├── stg_Invoice.sql
+    │   │   ├── stg_InvoiceDetail.sql
+    │   │   ├── stg_StorageTank.sql
+    │   │   └── stg_InventoryTransaction.sql
+    │   │
+    │   └── datawarehouse/
+    │       ├── schema.yml
+    │       ├── dim_date.sql
+    │       ├── dim_time.sql
+    │       ├── dim_customer.sql
+    │       ├── dim_employee.sql
+    │       ├── dim_gasstation.sql
+    │       ├── dim_product.sql
+    │       ├── dim_paymentmethod.sql
+    │       ├── dim_tank.sql
+    │       ├── fact_sales.sql
+    │       └── fact_inventory.sql
+    │
+    └── app.py                          # Streamlit dashboard
+  ```
 ---
 
 ## 3.Business Questions (15 ข้อ)
