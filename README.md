@@ -101,3 +101,7 @@ pip install -r requirements.txt
 ---
 
 ## 4. Data Cube Diagram
+* [คลิกที่นี่เพื่อเปิดดู ER Diagram บน Google Drive](https://drive.google.com/file/d/1p_veBgEP3hKBFL9z522rmi3cKWPJ4uxq/view?usp=sharing)
+
+![Operational ER Diagram](Data_Model_Diagram.drawio.png)
+
