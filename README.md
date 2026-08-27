@@ -30,7 +30,25 @@
 
 ---
 
-## 2.Business Questions (15 ข้อ)
+## 2. กระบวนการ ELT & ขั้นตอนการติดตั้งใช้งาน (ELT Process & Setup)
+
+การทำ Transform ด้วย dbt: อธิบายการแปลงข้อมูลจาก staging ไปสู่ datawarehouse
+
+คำสั่งการรันโปรเจกต์:
+# 1. ติดตั้ง Library
+pip install -r requirements.txt
+
+# 2. รัน dbt แปลงข้อมูล
+* cd Gasstation_dw_duckdb
+* dbt run
+
+# 3. รัน Web Application Launch Interactive Business Dashboard
+* streamlit run app.py
+* streamlit run dashboard_app.py
+  
+---
+
+## 3.Business Questions (15 ข้อ)
 
 ### ด้านยอดขายและรายได้ (`invoice`, `invoicedetail`)
 
@@ -82,37 +100,4 @@
 
 ---
 
-## 3. Multidimensional Data Model Design
-
-การออกแบบคลังข้อมูลในรูปแบบ **Star Schema** ประกอบด้วย:
-
-### Fact Tables
-* **`Fact_Sales`**: บันทึกธุรกรรมการขายน้ำมันรายบิล (Measures: `Quantity_Sold`, `Total_Price`, `Cost_Unit_Price`, `Gross_Profit`)
-* **`Fact_Inventory_Transaction`**: บันทึกการเคลื่อนไหวของสต๊อกน้ำมัน (Measures: `Quantity_In`, `Quantity_Out`, `Current_Quantity`)
-
-### Dimension Tables & Hierarchies
-* **`Dim_Customer`**: `Customer_ID` -> `Vehicle_Type_Name`
-* **`Dim_Employee`**: `Employee_ID` -> `Position` -> `GasStation_ID`
-* **`Dim_GasStation`**: `GasStation_ID` -> `Station_Name` -> `Location`
-* **`Dim_Product`**: `Product_ID` -> `Supplier_ID`
-* **`Dim_StorageTank`**: `Tank_ID` -> `GasStation_ID` -> `Capacity`
-* **`Dim_Date`**: `Date_Key` -> `Day` -> `Month` -> `Quarter` -> `Year`
-
----
-
-## 4. กระบวนการ ELT & ขั้นตอนการติดตั้งใช้งาน (ELT Process & Setup)
-
-การทำ Transform ด้วย dbt: อธิบายการแปลงข้อมูลจาก staging ไปสู่ datawarehouse
-
-คำสั่งการรันโปรเจกต์:
-# 1. ติดตั้ง Library
-pip install -r requirements.txt
-
-# 2. รัน dbt แปลงข้อมูล
-* cd Gasstation_dw_duckdb
-* dbt run
-
-# 3. รัน Web Application Launch Interactive Business Dashboard
-* streamlit run app.py
-* streamlit run dashboard_app.py
----
+## 4. Data Cube Diagram
