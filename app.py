@@ -218,15 +218,33 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-tables_df = run_query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'main' ORDER BY table_name")
+#  คิวรีสำหรับดึงเฉพาะตารางข้อมูลหลักที่ใช้งานจริง
+tables_query = """
+    SELECT table_name 
+    FROM information_schema.tables 
+    WHERE table_schema = 'main'
+      AND (
+          table_name LIKE 'stg_%' 
+          OR table_name LIKE 'dim_%' 
+          OR table_name LIKE 'fact_%'
+          OR table_name IN (
+              'Customer', 'Employee', 'GasStation', 
+              'InventoryTransaction', 'Invoice', 'InvoiceDetail', 
+              'Product', 'StorageTank'
+          )
+      )
+    ORDER BY table_name;
+"""
+
+tables_df = run_query(tables_query)
 tables = tables_df['table_name'].tolist() if not tables_df.empty else []
 
 stats_data = []
 for t in tables:
-    count_df = run_query(f"SELECT COUNT(*) as row_count FROM main.{t}")
+    count_df = run_query(f'SELECT COUNT(*) as row_count FROM main."{t}"')
     row_cnt = count_df['row_count'].iloc[0] if (not count_df.empty and 'row_count' in count_df.columns) else 0
     
-    schema_df = run_query(f"PRAGMA table_info('main.{t}')")
+    schema_df = run_query(f'PRAGMA table_info(\'main."{t}"\')')
     col_cnt = len(schema_df) if not schema_df.empty else 0
     stats_data.append({"table_name": t, "row_count": row_cnt, "column_count": col_cnt})
 
@@ -286,7 +304,7 @@ with tab1:
                 marker_color='#38BDF8'
             )
             fig.update_layout(
-                height=360,
+                height=450,
                 margin=dict(l=0, r=20, t=10, b=0),
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
@@ -302,7 +320,7 @@ with tab1:
                 stats_df.rename(columns={"table_name": "Table Name", "row_count": "Row Count", "column_count": "Columns"}),
                 use_container_width=True,
                 hide_index=True,
-                height=360
+                height=450
             )
 
 # TAB 2: SCHEMA & PREVIEW
@@ -310,8 +328,8 @@ with tab2:
     if selected_table != "None":
         st.markdown(f"#### Entity Profile: `{selected_table}`")
         
-        schema_df = run_query(f"PRAGMA table_info('main.{selected_table}')")
-        preview_df = run_query(f"SELECT * FROM main.{selected_table} LIMIT {preview_limit}")
+        schema_df = run_query(f'PRAGMA table_info(\'main."{selected_table}"\')')
+        preview_df = run_query(f'SELECT * FROM main."{selected_table}" LIMIT {preview_limit}')
         
         col_main, col_info = st.columns([2.8, 1.2])
         
@@ -348,7 +366,7 @@ with tab3:
     st.markdown("#### SQL Query Console")
     st.caption("Execute read-only SQL queries directly against the DuckDB instance.")
     
-    default_sql = f"SELECT * FROM main.{selected_table} LIMIT 20;" if selected_table != "None" else "SELECT 1;"
+    default_sql = f'SELECT * FROM main."{selected_table}" LIMIT 20;' if selected_table != "None" else "SELECT 1;"
     user_sql = st.text_area("SQL Statement", value=default_sql, height=130)
     
     if st.button("Execute Query"):
