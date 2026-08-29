@@ -1,8 +1,11 @@
+with source as (
+    select * from {{ source('gas_station_raw', 'gasstation') }}
+)
 select
-    gasstationid::int       as gasstation_id,
-    trim(gasstationname)    as gasstation_name,
-    trim(address)            as address,
-    phonenumber               as phone_number,
-    email                      as email,
-    notes                      as notes
-from {{ source('gas_station_raw', 'gasstation') }}
+    GasStationID::int      as gasstation_id,
+    trim(GasStationName)   as gasstation_name,
+    trim(Address)          as address,
+    PhoneNumber            as phone_number,
+    Email                  as email,
+    Notes                  as notes
+from source

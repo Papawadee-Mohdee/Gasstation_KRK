@@ -14,7 +14,7 @@ profile: 'Gasstation_dw_duckdb'
 model-paths: ["models"]
 analysis-paths: ["analyses"]
 test-paths: ["tests"]
-seed-paths: ["seeds"]
+seed-paths: ["Datasets", "seeds"]
 macro-paths: ["macros"]
 snapshot-paths: ["snapshots"]
 

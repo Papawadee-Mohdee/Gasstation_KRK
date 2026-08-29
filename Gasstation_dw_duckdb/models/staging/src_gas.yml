@@ -5,26 +5,18 @@ sources:
     schema: main
     tables:
       - name: customer
-        meta:
-          external_location: "Datasets/Customer.csv"
+        identifier: Customer
       - name: employee
-        meta:
-          external_location: "Datasets/Employee.csv"
+        identifier: Employee
       - name: gasstation
-        meta:
-          external_location: "Datasets/GasStation.csv"
-      - name: product
-        meta:
-          external_location: "Datasets/Product.csv"
+        identifier: GasStation
       - name: invoice
-        meta:
-          external_location: "Datasets/Invoice.csv"
+        identifier: Invoice
       - name: invoicedetail
-        meta:
-          external_location: "Datasets/InvoiceDetail.csv"
+        identifier: InvoiceDetail
+      - name: product
+        identifier: Product
       - name: storagetank
-        meta:
-          external_location: "Datasets/StorageTank.csv"
+        identifier: StorageTank
       - name: inventorytransaction
-        meta:
-          external_location: "Datasets/InventoryTransaction.csv"
+        identifier: InventoryTransaction

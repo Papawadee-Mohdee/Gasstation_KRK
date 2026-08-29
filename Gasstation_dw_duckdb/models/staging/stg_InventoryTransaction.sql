@@ -1,8 +1,11 @@
+with source as (
+    select * from {{ source('gas_station_raw', 'inventorytransaction') }}
+)
 select
-    transactionid::int      as transaction_id,
-    tankid::int              as tank_id,
-    quantityin::decimal        as quantity_in,
-    quantityout::decimal         as quantity_out,
-    remainingquantity::decimal     as remaining_quantity,
-    strptime(transactiondate, '%d/%m/%Y %H:%M')::timestamp as transaction_date
-from {{ source('gas_station_raw', 'inventorytransaction') }}
+    TransactionID::int            as transaction_id,
+    TankID::int                   as tank_id,
+    QuantityIn::double            as quantity_in,
+    QuantityOut::double           as quantity_out,
+    RemainingQuantity::double     as remaining_quantity,
+    strptime(TransactionDate, '%d/%m/%Y %H:%M')::timestamp as transaction_date
+from source

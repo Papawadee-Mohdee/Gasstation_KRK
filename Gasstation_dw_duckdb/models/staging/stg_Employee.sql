@@ -1,10 +1,13 @@
+with source as (
+    select * from {{ source('gas_station_raw', 'employee') }}
+)
 select
-    employeeid::int        as employee_id,
-    trim(employeename)     as employee_name,
-    position                as position,
-    gasstationid::int       as gasstation_id,
-    phonenumber              as phone_number,
-    email                     as email,
-    startdate::date          as start_date,
-    trim(address)             as address
-from {{ source('gas_station_raw', 'employee') }}
+    EmployeeID::int        as employee_id,
+    trim(EmployeeName)     as employee_name,
+    trim(Position)         as position,
+    GasStationID::int      as gasstation_id,
+    PhoneNumber            as phone_number,
+    Email                  as email,
+    StartDate::date        as start_date,
+    trim(Address)          as address
+from source
