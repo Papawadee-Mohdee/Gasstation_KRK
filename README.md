@@ -138,3 +138,36 @@ Gasstation_KRK/
 
 ![Operational ER Diagram](Data_Model_Diagram.drawio.png)
 
+## Interactive Web Application & Analytics Dashboard
+
+โปรเจกต์นี้ได้รับการพัฒนาและเปิดให้เข้าใช้งานผ่าน Streamlit Web Application ที่รวมทั้งระบบตรวจเช็กคลังข้อมูล (DW Inspector) และแดชบอร์ดวิเคราะห์ธุรกิจ (Executive Analytics) ไว้ในระบบเดียว:
+
+* **Live Demo Web Application:** [เข้าใช้งาน GasStation Enterprise DW & Analytics Studio](https://animated-tribble-r774jrjv4xgjcg6j-8501.app.github.dev/)
+
+---
+
+### โครงสร้างฟังก์ชันการทำงานบน Web Application
+
+| โมดูล / แท็บ (Tab) | วัตถุประสงค์ (Business Purpose) |
+| :--- | :--- |
+| **1. DW Table Inspector** | ตรวจสอบข้อมูลดิบ โครงสร้างเมตาเดตา (Schema Metadata) และทดสอบรัน SQL Console บน DuckDB |
+| **2. Sales & Revenue Analytics** | สรุปรายงานวิเคราะห์ยอดขายและรายได้สถิติประจำสาขา ชนิดน้ำมัน และช่วงเวลา (Q1 - Q5) |
+| **3. Inventory Operations** | ติดตามระดับน้ำมันคงเหลือในถัง อัตราเติมเข้า (Inflow) และจ่ายออก (Outflow) (Q6 - Q10) |
+| **4. Staff & Customer Intelligence** | ประเมินยอดขายตามรายชื่อพนักงาน และพฤติกรรมกลุ่มลูกค้ายานพาหนะ (Q11 - Q15) |
+| **5. Ad-Hoc OLAP Explorer** | เครื่องมือ Slice-and-Dice วิเคราะห์มิติข้อมูลอิสระ (Custom Dimensions) ตามต้องการ |
+
+---
+
+### คำสั่งสำหรับรันระบบบน Local / GitHub Codespaces
+
+```bash
+# 1. ติดตั้ง Dependencies ทั้งหมด
+pip install -r requirements.txt
+
+# 2. รันระบบ dbt สำหรับประมวลผลคลังข้อมูล
+cd Gasstation_dw_duckdb
+dbt run
+cd ..
+
+# 3. สั่งรัน Web Application หลัก
+streamlit run app.py --server.fileWatcherType=none
