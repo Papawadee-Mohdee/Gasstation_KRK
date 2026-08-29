@@ -145,16 +145,29 @@ st.markdown(
 # -----------------------------------------------------------------------------
 # DATABASE ENGINE & CONNECTION MANAGEMENT
 # -----------------------------------------------------------------------------
-PROJECT_ROOT = Path(__file__).resolve().parent
-DB_PATH = PROJECT_ROOT / "Gasstation_dw_duckdb" / "dev.duckdb"
+CURRENT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = CURRENT_DIR.parent if CURRENT_DIR.name == "pages" else CURRENT_DIR
+
+candidate_db_paths = [
+    PROJECT_ROOT / "Gasstation_dw_duckdb" / "dev.duckdb",
+    PROJECT_ROOT / "dev.duckdb",
+    Path.cwd() / "Gasstation_dw_duckdb" / "dev.duckdb",
+    Path.cwd() / "dev.duckdb",
+]
+
+DB_PATH = None
+for candidate in candidate_db_paths:
+    if candidate.exists():
+        DB_PATH = candidate
+        break
 
 @st.cache_resource
 def get_db_connection():
-    if os.path.exists(DB_PATH):
+    if DB_PATH and os.path.exists(DB_PATH):
         try:
             conn = duckdb.connect(str(DB_PATH), read_only=True)
             tbls = [r[0] for r in conn.execute("SELECT table_name FROM information_schema.tables WHERE table_schema='main'").fetchall()]
-            if "fact_sales" in tbls:
+            if "fact_sales" in tbls or "dim_date" in tbls:
                 return conn, "khorakhung engine"
         except Exception:
             pass
@@ -220,6 +233,9 @@ def fetch_inventory_data():
     except Exception:
         return pd.DataFrame()
 
+# -----------------------------------------------------------------------------
+# FETCH DATASETS
+# -----------------------------------------------------------------------------
 df_sales = fetch_sales_data()
 df_inv = fetch_inventory_data()
 
@@ -268,7 +284,6 @@ tab1, tab2, tab3, tab4 = st.tabs([
     "Ad-Hoc OLAP Explorer"
 ])
 
-# HELPER PLOTLY LAYOUT FORMATTER
 def apply_corporate_layout(fig):
     fig.update_layout(
         height=320,
@@ -498,7 +513,6 @@ with tab4:
 
         y_col = "total_price" if "Revenue" in metric_choice else "quantity_sold"
         
-        # Duplicate GroupBy Column Protection
         if legend_dim == "None" or legend_dim == x_dim:
             group_cols = [x_dim]
             color_arg = None
