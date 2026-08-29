@@ -17,4 +17,4 @@ Thumbs.db
 .vscode/
 
 # Environment Variables
-.env
+.envGasstation_dw_duckdb/dev.duckdb
