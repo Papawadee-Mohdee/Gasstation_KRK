@@ -101,7 +101,7 @@ st.markdown(
     }
     
     .metric-value {
-        font-size: 1.6rem;
+        font-size: 1.55rem;
         font-weight: 800;
         color: #FFFFFF;
         font-family: 'JetBrains Mono', monospace;
@@ -182,7 +182,7 @@ def get_db_connection():
         CREATE TABLE dim_employee AS SELECT i as employee_key, i as employee_id, 'Employee ' || i as employee_name FROM range(1, 21) t(i);
         CREATE TABLE dim_paymentmethod AS SELECT 1 as paymentmethod_key, 'Cash' as payment_method UNION SELECT 2, 'Credit Card' UNION SELECT 3, 'QR PromptPay';
         CREATE TABLE dim_tank AS SELECT i as tank_key, i as tank_id, (i%10)+1 as gasstation_id, 'Tank ' || i as tank_name, 20000 as capacity_liters FROM range(1, 31) t(i);
-        CREATE TABLE fact_sales AS SELECT 20240101 + (i%30) as date_key, (i%24) as time_key, (i%100)+1 as customer_key, (i%20)+1 as employee_key, (i%10)+1 as gasstation_key, (i%3)+1 as product_key, (i%3)+1 as paymentmethod_key, i as invoice_id, i as invoice_detail_id, 40.0 as quantity_sold, 35.0 as selling_price, 1400.0 as total_price FROM range(1, 1000) t(i);
+        CREATE TABLE fact_sales AS SELECT 20240101 + (i%30) as date_key, (i%24) as time_key, (i%100)+1 as customer_key, (i%20)+1 as employee_key, (i%10)+1 as gasstation_key, (i%3)+1 as product_key, (i%3)+1 as paymentmethod_key, i as invoice_id, i as invoice_detail_id, 40.0 as quantity_sold, 35000.0 as selling_price, 1400000.0 as total_price FROM range(1, 1000) t(i);
         CREATE TABLE fact_inventory AS SELECT 20240101 + (i%30) as date_key, (i%24) as time_key, (i%30)+1 as tank_key, (i%10)+1 as gasstation_key, i as transaction_id, case when i%5=0 then 5000.0 else 0.0 end as quantity_in, 50.0 as quantity_out, (15000 - (i%1000)) as remaining_quantity FROM range(1, 1000) t(i);
     """)
     return conn, "khorakhung engine (Simulation)"
@@ -306,10 +306,10 @@ with tab1:
     avg_ticket = tot_rev / tot_orders if tot_orders > 0 else 0
 
     k1, k2, k3, k4 = st.columns(4)
-    k1.markdown(f'<div class="metric-box"><div class="metric-label">Total Revenue</div><div class="metric-value">฿{tot_rev:,.2f}</div></div>', unsafe_allow_html=True)
+    k1.markdown(f'<div class="metric-box"><div class="metric-label">Total Revenue</div><div class="metric-value">{tot_rev:,.0f} ₫</div></div>', unsafe_allow_html=True)
     k2.markdown(f'<div class="metric-box"><div class="metric-label">Volume Sold</div><div class="metric-value">{tot_qty:,.1f} L</div></div>', unsafe_allow_html=True)
     k3.markdown(f'<div class="metric-box"><div class="metric-label">Invoices Count</div><div class="metric-value">{tot_orders:,}</div></div>', unsafe_allow_html=True)
-    k4.markdown(f'<div class="metric-box"><div class="metric-label">Avg Ticket Size</div><div class="metric-value">฿{avg_ticket:,.2f}</div></div>', unsafe_allow_html=True)
+    k4.markdown(f'<div class="metric-box"><div class="metric-label">Avg Ticket Size</div><div class="metric-value">{avg_ticket:,.0f} ₫</div></div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
     c1, c2 = st.columns(2)
@@ -323,10 +323,10 @@ with tab1:
         rev_branch = df_sales.groupby("gasstation_name")["total_price"].sum().reset_index() if not df_sales.empty else pd.DataFrame()
         if not rev_branch.empty:
             top_b = rev_branch.sort_values(by="total_price", ascending=False).iloc[0]
-            st.markdown(f'<div class="insight-card">Executive Summary: สาขาที่มีรายได้สูงสุดคือ <b>{top_b["gasstation_name"]}</b> สร้างรายได้รวม <b>฿{top_b["total_price"]:,.2f}</b></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="insight-card">Executive Summary: สาขาที่มีรายได้สูงสุดคือ <b>{top_b["gasstation_name"]}</b> สร้างรายได้รวม <b>{top_b["total_price"]:,.0f} ₫</b></div>', unsafe_allow_html=True)
             
-            fig_q1 = px.bar(rev_branch, x="gasstation_name", y="total_price", text_auto=".2s", labels={"gasstation_name": "Branch", "total_price": "Revenue (THB)"})
-            fig_q1.update_traces(marker_color='#38BDF8', hovertemplate="Branch: %{x}<br>Revenue: ฿%{y:,.2f}")
+            fig_q1 = px.bar(rev_branch, x="gasstation_name", y="total_price", text_auto=".2s", labels={"gasstation_name": "Branch", "total_price": "Revenue (VND)"})
+            fig_q1.update_traces(marker_color='#38BDF8', hovertemplate="Branch: %{x}<br>Revenue: %{y:,.0f} ₫")
             fig_q1 = apply_corporate_layout(fig_q1)
             st.plotly_chart(fig_q1, use_container_width=True)
 
@@ -342,7 +342,7 @@ with tab1:
             st.markdown(f'<div class="insight-card">Executive Summary: ผลิตภัณฑ์ที่ทำรายได้หลักคือ <b>{top_p["product_name"]}</b> คิดเป็นสัดส่วนสูงที่สุดของยอดขายน้ำมัน</div>', unsafe_allow_html=True)
             
             fig_q2 = px.pie(rev_prod, names="product_name", values="total_price", hole=0.4, color_discrete_sequence=['#38BDF8', '#34D399', '#818CF8'])
-            fig_q2.update_traces(hovertemplate="Product: %{label}<br>Revenue: ฿%{value:,.2f}<br>Share: %{percent}")
+            fig_q2.update_traces(hovertemplate="Product: %{label}<br>Revenue: %{value:,.0f} ₫<br>Share: %{percent}")
             fig_q2 = apply_corporate_layout(fig_q2)
             st.plotly_chart(fig_q2, use_container_width=True)
 
@@ -356,10 +356,10 @@ with tab1:
         rev_hour = df_sales.groupby("hour_24")["total_price"].sum().reset_index() if not df_sales.empty else pd.DataFrame()
         if not rev_hour.empty:
             peak_h = rev_hour.sort_values(by="total_price", ascending=False).iloc[0]
-            st.markdown(f'<div class="insight-card">Executive Summary: ช่วงเวลา Peak Hour ของวันคือ <b>{int(peak_h["hour_24"]):02d}:00 น.</b> มียอดขายสูงสุดที่ <b>฿{peak_h["total_price"]:,.2f}</b></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="insight-card">Executive Summary: ช่วงเวลา Peak Hour ของวันคือ <b>{int(peak_h["hour_24"]):02d}:00 น.</b> มียอดขายสูงสุดที่ <b>{peak_h["total_price"]:,.0f} ₫</b></div>', unsafe_allow_html=True)
             
-            fig_q3 = px.line(rev_hour, x="hour_24", y="total_price", markers=True, labels={"hour_24": "Hour (0-23)", "total_price": "Revenue (THB)"})
-            fig_q3.update_traces(line_color='#38BDF8', hovertemplate="Hour: %{x}:00<br>Revenue: ฿%{y:,.2f}")
+            fig_q3 = px.line(rev_hour, x="hour_24", y="total_price", markers=True, labels={"hour_24": "Hour (0-23)", "total_price": "Revenue (VND)"})
+            fig_q3.update_traces(line_color='#38BDF8', hovertemplate="Hour: %{x}:00<br>Revenue: %{y:,.0f} ₫")
             fig_q3 = apply_corporate_layout(fig_q3)
             st.plotly_chart(fig_q3, use_container_width=True)
 
@@ -372,10 +372,10 @@ with tab1:
         rev_pm = df_sales.groupby("payment_method")["total_price"].sum().reset_index() if not df_sales.empty else pd.DataFrame()
         if not rev_pm.empty:
             top_pm = rev_pm.sort_values(by="total_price", ascending=False).iloc[0]
-            st.markdown(f'<div class="insight-card">Executive Summary: ช่องทางการชำระเงินที่นิยมมากที่สุดคือ <b>{top_pm["payment_method"]}</b> มียอดรวม <b>฿{top_pm["total_price"]:,.2f}</b></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="insight-card">Executive Summary: ช่องทางการชำระเงินที่นิยมมากที่สุดคือ <b>{top_pm["payment_method"]}</b> มียอดรวม <b>{top_pm["total_price"]:,.0f} ₫</b></div>', unsafe_allow_html=True)
             
-            fig_q4 = px.bar(rev_pm, x="total_price", y="payment_method", orientation="h", text_auto=".2s", labels={"total_price": "Revenue (THB)", "payment_method": "Method"})
-            fig_q4.update_traces(marker_color='#818CF8', hovertemplate="Method: %{y}<br>Revenue: ฿%{x:,.2f}")
+            fig_q4 = px.bar(rev_pm, x="total_price", y="payment_method", orientation="h", text_auto=".2s", labels={"total_price": "Revenue (VND)", "payment_method": "Method"})
+            fig_q4.update_traces(marker_color='#818CF8', hovertemplate="Method: %{y}<br>Revenue: %{x:,.0f} ₫")
             fig_q4 = apply_corporate_layout(fig_q4)
             st.plotly_chart(fig_q4, use_container_width=True)
 
@@ -435,10 +435,10 @@ with tab3:
         emp_rev = df_sales.groupby(["employee_name", "gasstation_name"])["total_price"].sum().reset_index().sort_values(by="total_price", ascending=False).head(10) if not df_sales.empty else pd.DataFrame()
         if not emp_rev.empty:
             top_e = emp_rev.iloc[0]
-            st.markdown(f'<div class="insight-card">Executive Summary: พนักงานที่ทำยอดขายสูงสุดคือ <b>{top_e["employee_name"]}</b> ทำยอดขายรวม <b>฿{top_e["total_price"]:,.2f}</b></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="insight-card">Executive Summary: พนักงานที่ทำยอดขายสูงสุดคือ <b>{top_e["employee_name"]}</b> ทำยอดขายรวม <b>{top_e["total_price"]:,.0f} ₫</b></div>', unsafe_allow_html=True)
             
-            fig_q11 = px.bar(emp_rev, x="total_price", y="employee_name", color="gasstation_name", orientation="h", text_auto=".2s", labels={"total_price": "Revenue (THB)", "employee_name": "Employee"}, color_discrete_sequence=['#818CF8', '#A78BFA', '#C084FC'])
-            fig_q11.update_traces(hovertemplate="Employee: %{y}<br>Revenue: ฿%{x:,.2f}")
+            fig_q11 = px.bar(emp_rev, x="total_price", y="employee_name", color="gasstation_name", orientation="h", text_auto=".2s", labels={"total_price": "Revenue (VND)", "employee_name": "Employee"}, color_discrete_sequence=['#818CF8', '#A78BFA', '#C084FC'])
+            fig_q11.update_traces(hovertemplate="Employee: %{y}<br>Revenue: %{x:,.0f} ₫")
             fig_q11 = apply_corporate_layout(fig_q11)
             st.plotly_chart(fig_q11, use_container_width=True)
 
@@ -468,10 +468,10 @@ with tab3:
         cust_rev = df_sales.groupby("customer_name")["total_price"].sum().reset_index().sort_values(by="total_price", ascending=False).head(10) if not df_sales.empty else pd.DataFrame()
         if not cust_rev.empty:
             top_c = cust_rev.iloc[0]
-            st.markdown(f'<div class="insight-card">Executive Summary: ลูกค้ารายใหญ่ที่สร้างรายได้สูงสุดคือ <b>{top_c["customer_name"]}</b> ยอดซื้อสะสม <b>฿{top_c["total_price"]:,.2f}</b></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="insight-card">Executive Summary: ลูกค้ารายใหญ่ที่สร้างรายได้สูงสุดคือ <b>{top_c["customer_name"]}</b> ยอดซื้อสะสม <b>{top_c["total_price"]:,.0f} ₫</b></div>', unsafe_allow_html=True)
             
-            fig_q14 = px.bar(cust_rev, x="customer_name", y="total_price", text_auto=".2s", labels={"customer_name": "Customer", "total_price": "Revenue (THB)"})
-            fig_q14.update_traces(marker_color='#A78BFA', hovertemplate="Customer: %{x}<br>Total Spend: ฿%{y:,.2f}")
+            fig_q14 = px.bar(cust_rev, x="customer_name", y="total_price", text_auto=".2s", labels={"customer_name": "Customer", "total_price": "Revenue (VND)"})
+            fig_q14.update_traces(marker_color='#A78BFA', hovertemplate="Customer: %{x}<br>Total Spend: %{y:,.0f} ₫")
             fig_q14 = apply_corporate_layout(fig_q14)
             st.plotly_chart(fig_q14, use_container_width=True)
 
@@ -484,10 +484,10 @@ with tab3:
         geo_rev = df_sales.groupby("station_address")["total_price"].sum().reset_index() if not df_sales.empty else pd.DataFrame()
         if not geo_rev.empty:
             top_g = geo_rev.sort_values(by="total_price", ascending=False).iloc[0]
-            st.markdown(f'<div class="insight-card">Executive Summary: ภูมิภาคหลักที่ทำรายได้สูงสุดคือ <b>{top_g["station_address"]}</b> มียอดรวม <b>฿{top_g["total_price"]:,.2f}</b></div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="insight-card">Executive Summary: ภูมิภาคหลักที่ทำรายได้สูงสุดคือ <b>{top_g["station_address"]}</b> มียอดรวม <b>{top_g["total_price"]:,.0f} ₫</b></div>', unsafe_allow_html=True)
             
             fig_q15 = px.pie(geo_rev, names="station_address", values="total_price", hole=0.3, color_discrete_sequence=['#818CF8', '#A78BFA', '#C084FC', '#6366F1'])
-            fig_q15.update_traces(hovertemplate="Region: %{label}<br>Revenue: ฿%{value:,.2f}<br>Share: %{percent}")
+            fig_q15.update_traces(hovertemplate="Region: %{label}<br>Revenue: %{value:,.0f} ₫<br>Share: %{percent}")
             fig_q15 = apply_corporate_layout(fig_q15)
             st.plotly_chart(fig_q15, use_container_width=True)
 

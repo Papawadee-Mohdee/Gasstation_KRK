@@ -1,4 +1,6 @@
+from datetime import datetime
 import os
+from pathlib import Path
 import duckdb
 import pandas as pd
 import plotly.express as px
@@ -22,13 +24,11 @@ st.markdown("""
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
     }
     
-    /* Main App Background */
     .stApp {
         background-color: #0B0F19;
         color: #F8FAFC;
     }
     
-    /* SIDEBAR FIX: Force Dark Theme & High Contrast Text */
     [data-testid="stSidebar"] {
         background-color: #0F172A !important;
         border-right: 1px solid #1E293B !important;
@@ -54,7 +54,6 @@ st.markdown("""
         color: #FFFFFF !important;
     }
     
-    /* Header Container */
     .app-header {
         border-bottom: 1px solid #1E293B;
         padding-bottom: 1.25rem;
@@ -73,12 +72,10 @@ st.markdown("""
         margin-top: 0.25rem;
     }
 
-    /* Force Label & Text Contrast in Main Area */
     .stMainBlockContainer label, .stMainBlockContainer p {
         color: #E2E8F0 !important;
     }
     
-    /* SQL Textarea Editor Fix */
     .stTextArea textarea {
         background-color: #1E293B !important;
         color: #F8FAFC !important;
@@ -93,7 +90,6 @@ st.markdown("""
         box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2) !important;
     }
 
-    /* Minimal Metric Cards */
     .metric-card {
         background-color: #1E293B;
         border: 1px solid #334155;
@@ -114,7 +110,6 @@ st.markdown("""
         margin-top: 0.25rem;
     }
 
-    /* Navigation Tabs */
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
         border-bottom: 1px solid #1E293B;
@@ -135,7 +130,6 @@ st.markdown("""
         border-bottom: 2px solid #38BDF8 !important;
     }
     
-    /* Primary Button */
     .stButton > button {
         background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%) !important;
         color: #FFFFFF !important;
@@ -151,32 +145,47 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # -----------------------------------------------------------------------------
-# DATABASE ENGINE & CONNECTION MANAGEMENT
+# DATABASE ENGINE & DYNAMIC PATH SEARCH MANAGEMENT
 # -----------------------------------------------------------------------------
-DB_PATH = "Gasstation_dw_duckdb/dev.duckdb"
-CSV_DIR = "Gasstation_dw_duckdb"
+CURRENT_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = CURRENT_DIR.parent if CURRENT_DIR.name == "pages" else CURRENT_DIR
+
+candidate_db_paths = [
+    PROJECT_ROOT / "Gasstation_dw_duckdb" / "dev.duckdb",
+    PROJECT_ROOT / "dev.duckdb",
+    Path.cwd() / "Gasstation_dw_duckdb" / "dev.duckdb",
+    Path.cwd() / "dev.duckdb",
+]
+
+DB_PATH = None
+for candidate in candidate_db_paths:
+    if candidate.exists():
+        DB_PATH = candidate
+        break
+
+CSV_DIR = PROJECT_ROOT / "Gasstation_dw_duckdb"
 
 @st.cache_resource
 def init_database():
-    if os.path.exists(DB_PATH):
+    if DB_PATH and os.path.exists(DB_PATH):
         try:
-            conn = duckdb.connect(DB_PATH, read_only=True)
+            conn = duckdb.connect(str(DB_PATH), read_only=True)
             tables = conn.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'").fetchall()
             if len(tables) > 0:
-                return conn, f"DuckDB ({DB_PATH})"
+                return conn, "khorakhung engine"
         except Exception:
             pass
             
     conn = duckdb.connect(":memory:")
     csv_entities = {
-        "Customer": f"{CSV_DIR}/Customer.csv",
-        "Employee": f"{CSV_DIR}/Employee.csv",
-        "GasStation": f"{CSV_DIR}/GasStation.csv",
-        "Invoice": f"{CSV_DIR}/Invoice.csv",
-        "InvoiceDetail": f"{CSV_DIR}/InvoiceDetail.csv",
-        "InventoryTransaction": f"{CSV_DIR}/InventoryTransaction.csv",
-        "Product": f"{CSV_DIR}/Product.csv",
-        "StorageTank": f"{CSV_DIR}/StorageTank.csv"
+        "Customer": CSV_DIR / "Customer.csv",
+        "Employee": CSV_DIR / "Employee.csv",
+        "GasStation": CSV_DIR / "GasStation.csv",
+        "Invoice": CSV_DIR / "Invoice.csv",
+        "InvoiceDetail": CSV_DIR / "InvoiceDetail.csv",
+        "InventoryTransaction": CSV_DIR / "InventoryTransaction.csv",
+        "Product": CSV_DIR / "Product.csv",
+        "StorageTank": CSV_DIR / "StorageTank.csv"
     }
     
     loaded_any = False
@@ -186,7 +195,7 @@ def init_database():
             loaded_any = True
             
     if loaded_any:
-        return conn, f"CSV Engine ({CSV_DIR}/)"
+        return conn, "CSV Engine Driver"
         
     conn.execute("""
         CREATE TABLE Customer AS SELECT i AS CustomerID, 'Customer ' || i AS CustomerName FROM range(1, 1001) t(i);
@@ -198,7 +207,7 @@ def init_database():
         CREATE TABLE Product AS SELECT i AS ProductID, 'Product ' || i AS ProductName FROM range(1, 4) t(i);
         CREATE TABLE StorageTank AS SELECT i AS TankID FROM range(1, 31) t(i);
     """)
-    return conn, "In-Memory Simulation Driver"
+    return conn, "khorakhung engine (Simulation)"
 
 conn, engine_status = init_database()
 
@@ -211,14 +220,13 @@ def run_query(query: str) -> pd.DataFrame:
 # -----------------------------------------------------------------------------
 # APPLICATION HEADER
 # -----------------------------------------------------------------------------
-st.markdown(f"""
+st.markdown("""
     <div class="app-header">
         <div class="app-title">GasStation Data Warehouse Inspector</div>
         <div class="app-subtitle">Environment: Gasstation_dw_duckdb &nbsp;|&nbsp; Target Schema: main</div>
     </div>
 """, unsafe_allow_html=True)
 
-#  คิวรีสำหรับดึงเฉพาะตารางข้อมูลหลักที่ใช้งานจริง
 tables_query = """
     SELECT table_name 
     FROM information_schema.tables 
@@ -261,6 +269,7 @@ with st.sidebar:
     
     st.markdown("**Engine Status**")
     st.caption(engine_status)
+    st.caption(f"Last Refreshed: {datetime.now().strftime('%H:%M:%S')}")
     
     st.markdown("---")
     preview_limit = st.select_slider("Preview Limit", options=[25, 50, 100, 250, 500, 1000], value=100)
