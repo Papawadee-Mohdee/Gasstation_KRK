@@ -19,7 +19,7 @@
 
 ---
 
-## 1.Operational Database (OLTP)
+## 1.Operational Database(OLTP)
 
 * **ชุดข้อมูลต้นทาง:** GasStationDB (HCM City - PostgreSQL) จาก Kaggle
 * **บริบทของระบบ:** ระบบบันทึกธุรกรรมการขายน้ำมันประจำวัน การจัดการคลังน้ำมัน หัวจ่าย พนักงาน และลูกค้า
