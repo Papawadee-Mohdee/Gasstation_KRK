@@ -175,6 +175,9 @@ Gasstation_KRK/
 
 ### โครงสร้างฟังก์ชันการทำงานบน Web Application
 
+<img width="1816" height="2362" alt="ไม่มีชื่อเรื่อง" src="https://github.com/user-attachments/assets/3592475a-fd9c-45d2-a314-787e62ca3338" />
+
+
 | โมดูล / แท็บ (Tab) | วัตถุประสงค์ (Business Purpose) |
 | :--- | :--- |
 | **1. DW Table Inspector** | ตรวจสอบข้อมูลดิบ โครงสร้างเมตาเดตา (Schema Metadata) และทดสอบรัน SQL Console บน DuckDB |
