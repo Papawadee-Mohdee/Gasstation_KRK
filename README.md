@@ -187,7 +187,7 @@ Gasstation_KRK/
 | **5. Ad-Hoc OLAP Explorer** | เครื่องมือ Slice-and-Dice วิเคราะห์มิติข้อมูลอิสระ (Custom Dimensions) ตามต้องการ |
 
 ---
-## GAS STATION ANALYTICS
+## GAS STATION INSIGHT
 
 <img width="1414" height="2000" alt="image" src="https://github.com/user-attachments/assets/8b14c466-d902-4294-8662-eb96ee3129bd" />
 
