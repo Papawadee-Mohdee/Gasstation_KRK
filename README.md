@@ -219,5 +219,9 @@ cd Gasstation_dw_duckdb
 python load.py
 dbt run
 
+# สั่งเปิดใช้งาน Web Application
+cd ..
+streamlit run app.py
+---
 
 
