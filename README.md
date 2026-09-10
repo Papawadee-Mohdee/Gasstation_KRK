@@ -210,6 +210,9 @@ cd Gasstation_KRK
 python -m venv .venv
 source .venv/bin/activate  # สำหรับ Windows: .venv\Scripts\activate
 
+# Install required dependencies
+pip install -r requirements.txt
+
 
 
 
