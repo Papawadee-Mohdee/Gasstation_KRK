@@ -158,16 +158,3 @@ Gasstation_KRK/
 
 ---
 
-### คำสั่งสำหรับรันระบบบน Local / GitHub Codespaces
-
-```bash
-# 1. ติดตั้ง Dependencies ทั้งหมด
-pip install -r requirements.txt
-
-# 2. รันระบบ dbt สำหรับประมวลผลคลังข้อมูล
-cd Gasstation_dw_duckdb
-dbt run
-cd ..
-
-# 3. สั่งรัน Web Application หลัก
-streamlit run app.py --server.fileWatcherType=none
