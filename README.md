@@ -178,7 +178,7 @@ Gasstation_KRK/
 
 
 
-\
+
 | โมดูล / แท็บ (Tab) | วัตถุประสงค์ (Business Purpose) |
 | :--- | :--- |
 | **1. DW Table Inspector** | ตรวจสอบข้อมูลดิบ โครงสร้างเมตาเดตา (Schema Metadata) และทดสอบรัน SQL Console บน DuckDB |
