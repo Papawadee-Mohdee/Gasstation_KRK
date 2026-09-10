@@ -230,3 +230,11 @@ streamlit run app.py
 ```markdown
 ## Tech Stack & Architecture
 
+| Component | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Storage / DW Engine** | DuckDB | OLAP Database ประมวลผลคิวรีความเร็วสูงแบบ In-Memory / File-based |
+| **Transformation Tool** | dbt (data build tool) | ทำการแปลงข้อมูล (ELT) จาก Staging Layer สู่ Data Warehouse (Star Schema) |
+| **Language** | Python 3.10+ | ประมวลผลไฟล์สคริปต์ ดึงข้อมูล และจัดการ Pipeline |
+| **Data Visualization** | Streamlit, Plotly | สร้าง Interactive Web Application และ Dashboard วิเคราะห์ข้อมูล |
+| **Data Modeling** | Draw.io | ออกแบบ Relational ER Diagram และ Data Cube Star Schema |
+
