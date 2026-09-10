@@ -213,7 +213,11 @@ source .venv/bin/activate  # สำหรับ Windows: .venv\Scripts\activate
 # Install required dependencies
 pip install -r requirements.txt
 
-
+Run Data Pipeline & Application
+# สั่งรันสร้างฐานข้อมูล DuckDB และแปลงโครงสร้างด้วย dbt
+cd Gasstation_dw_duckdb
+python load.py
+dbt run
 
 
 
