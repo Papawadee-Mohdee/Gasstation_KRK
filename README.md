@@ -206,6 +206,11 @@ Getting Started / Quick Start Guide (คู่มือติดตั้งแ�
 git clone [https://github.com/USERNAME/Gasstation_KRK.git](https://github.com/USERNAME/Gasstation_KRK.git)
 cd Gasstation_KRK
 
+# Create and activate virtual environment
+python -m venv .venv
+source .venv/bin/activate  # สำหรับ Windows: .venv\Scripts\activate
+
+
 
 
 
