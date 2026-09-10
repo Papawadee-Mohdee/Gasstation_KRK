@@ -188,3 +188,4 @@ Gasstation_KRK/
 
 ---
 ## GAS STATION ANALYTICS
+<img width="1414" height="2000" alt="image" src="https://github.com/user-attachments/assets/83e27f63-bd02-414e-b3b0-b8e88d9e61a4" />
