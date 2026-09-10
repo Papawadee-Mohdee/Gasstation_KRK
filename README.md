@@ -176,6 +176,7 @@ Gasstation_KRK/
 
 ![Operational ER Diagram](Data_Model_Diagram.drawio.png)
 
+
 ## Interactive Web Application & Analytics Dashboard
 
 โปรเจกต์นี้ได้รับการพัฒนาและเปิดให้เข้าใช้งานผ่าน Streamlit Web Application ที่รวมทั้งระบบตรวจเช็กคลังข้อมูล (DW Inspector) และแดชบอร์ดวิเคราะห์ธุรกิจ (Executive Analytics) ไว้ในระบบเดียว:
