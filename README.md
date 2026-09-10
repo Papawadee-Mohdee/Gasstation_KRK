@@ -200,6 +200,12 @@ Getting Started / Quick Start Guide (คู่มือติดตั้งแ�
 * Python 3.10 ขึ้นไป
 * Git
 
+### 2. Environment Setup
+```bash
+# Clone repository
+git clone [https://github.com/USERNAME/Gasstation_KRK.git](https://github.com/USERNAME/Gasstation_KRK.git)
+cd Gasstation_KRK
+
 
 
 
