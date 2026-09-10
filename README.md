@@ -27,6 +27,8 @@
 
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.30+-FF4B4B?style=for-the-badge&logo=streamlit&logoColor=white)
 
+![License](https://img.shields.io/badge/License-MIT-green.svg?style=for-the-badge)
+
 ## 1. Operational Database(OLTP)
 
 * **ชุดข้อมูลต้นทาง:** GasStationDB (HCM City - PostgreSQL) จาก Kaggle
