@@ -192,3 +192,9 @@ Gasstation_KRK/
 <img width="1414" height="2000" alt="image" src="https://github.com/user-attachments/assets/8b14c466-d902-4294-8662-eb96ee3129bd" />
 
 ---
+
+Getting Started / Quick Start Guide (คู่มือติดตั้งและรันโปรเจกต์)
+## Quick Start & Installation
+
+
+
