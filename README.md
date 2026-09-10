@@ -227,4 +227,6 @@ streamlit run app.py
 ### 3. Tech Stack & Infrastructure Overview (สรุปเครื่องมือที่ใช้)
 สรุปบทบาทหน้าที่ของเครื่องมือแต่ละชนิดในโปรเจกต์ไว้ในรูปแบบตาราง:
 
+```markdown
+## Tech Stack & Architecture
 
