@@ -7,10 +7,11 @@ import plotly.express as px
 import streamlit as st
 
 # -----------------------------------------------------------------------------
-# PAGE CONFIGURATION & ENTERPRISE DESIGN SYSTEM
+# PAGE CONFIGURATION & MODERN LIGHT EXECUTIVE DESIGN SYSTEM
 # -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="GasStation Executive Analytics Studio",
+    page_title="Executive Analytics Dashboard",
+    page_icon="📊",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -18,29 +19,80 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sarabun:wght@400;500;600;700&display=swap');
     
     html, body, [class*="css"] {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-family: 'Plus Jakarta Sans', 'Sarabun', -apple-system, sans-serif !important;
     }
     
     .stApp {
-        background-color: #0B0F19;
-        color: #F8FAFC;
+        background-color: #F8FAFC;
+        color: #0F172A;
     }
     
+    /* SIDEBAR STYLING */
     [data-testid="stSidebar"] {
-        background-color: #0F172A !important;
-        border-right: 1px solid #1E293B !important;
+        background-color: #FFFFFF !important;
+        border-right: 1px solid #E2E8F0 !important;
+        padding-top: 1rem;
     }
     
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] label {
-        color: #E2E8F0 !important;
+        color: #334155 !important;
         font-weight: 500 !important;
     }
 
+    /* PROFILE AVATAR CONTAINER */
+    .profile-container {
+        text-align: center;
+        padding: 0.5rem 0 1.25rem 0;
+        border-bottom: 1px solid #F1F5F9;
+        margin-bottom: 1.25rem;
+    }
+    
+    .profile-avatar {
+        width: 68px;
+        height: 68px;
+        background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+        color: #FFFFFF;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        position: relative;
+        margin: 0 auto;
+    }
+
+    .profile-badge {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 14px;
+        height: 14px;
+        background-color: #10B981;
+        border: 2px solid #FFFFFF;
+        border-radius: 50%;
+    }
+
+    .profile-name {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #0F172A;
+        margin-top: 0.6rem;
+        letter-spacing: -0.01em;
+    }
+
+    .profile-role {
+        font-size: 0.8rem;
+        color: #64748B;
+        font-weight: 500;
+    }
+
+    /* HEADER STYLING */
     .app-header {
-        border-bottom: 1px solid #1E293B;
+        border-bottom: 1px solid #E2E8F0;
         padding-bottom: 1rem;
         margin-bottom: 1.5rem;
     }
@@ -48,54 +100,57 @@ st.markdown(
     .app-title {
         font-size: 1.75rem;
         font-weight: 800;
-        color: #FFFFFF;
+        color: #0F172A;
         letter-spacing: -0.025em;
     }
     
     .app-subtitle {
         font-size: 0.875rem;
-        color: #94A3B8;
+        color: #64748B;
         margin-top: 0.2rem;
     }
 
+    /* CARDS STYLING */
     .question-card {
-        background-color: #1E293B;
-        border: 1px solid #334155;
-        border-radius: 8px;
+        background-color: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
         padding: 1rem 1.25rem;
         margin-bottom: 0.75rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
     }
     
     .question-title {
         font-size: 0.95rem;
         font-weight: 700;
-        color: #38BDF8;
+        color: #2563EB;
         margin-bottom: 0.25rem;
         letter-spacing: -0.01em;
     }
 
     .insight-card {
-        background-color: #0F172A;
-        border-left: 3px solid #38BDF8;
-        border-radius: 0 6px 6px 0;
-        padding: 0.5rem 0.85rem;
+        background-color: #EFF6FF;
+        border-left: 4px solid #2563EB;
+        border-radius: 0 8px 8px 0;
+        padding: 0.55rem 0.85rem;
         margin-bottom: 1rem;
-        font-size: 0.82rem;
-        color: #CBD5E1;
+        font-size: 0.83rem;
+        color: #1E40AF;
+        font-weight: 500;
     }
 
     .metric-box {
-        background-color: #1E293B;
-        border: 1px solid #334155;
-        border-radius: 8px;
-        padding: 1rem 1.25rem;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+        background-color: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 1.1rem 1.25rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
     }
     
     .metric-label {
         font-size: 0.75rem;
         font-weight: 700;
-        color: #94A3B8;
+        color: #64748B;
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
@@ -103,39 +158,40 @@ st.markdown(
     .metric-value {
         font-size: 1.55rem;
         font-weight: 800;
-        color: #FFFFFF;
-        font-family: 'JetBrains Mono', monospace;
+        color: #0F172A;
         margin-top: 0.25rem;
     }
 
+    /* TABS STYLING */
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
-        border-bottom: 1px solid #1E293B;
+        border-bottom: 1px solid #E2E8F0;
         padding-bottom: 4px;
     }
     
     .stTabs [data-baseweb="tab"] {
         padding: 8px 18px;
-        border-radius: 6px;
+        border-radius: 8px;
         font-size: 0.875rem;
         font-weight: 600;
-        color: #94A3B8 !important;
+        color: #64748B !important;
         background-color: transparent;
         border: none !important;
     }
     
     .stTabs [aria-selected="true"] {
-        background-color: #1E293B !important;
-        color: #FFFFFF !important;
-        border-bottom: 2px solid #38BDF8 !important;
+        background-color: #FFFFFF !important;
+        color: #2563EB !important;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08);
+        border-bottom: 2px solid #2563EB !important;
     }
 
     .stDownloadButton > button {
-        background-color: #0284C7 !important;
+        background-color: #2563EB !important;
         color: #FFFFFF !important;
         border: none !important;
         font-weight: 600 !important;
-        border-radius: 6px !important;
+        border-radius: 8px !important;
     }
     </style>
 """,
@@ -240,16 +296,21 @@ df_sales = fetch_sales_data()
 df_inv = fetch_inventory_data()
 
 # -----------------------------------------------------------------------------
-# APPLICATION HEADER
+# SIDEBAR WITH PROFILE AVATAR ONLY
 # -----------------------------------------------------------------------------
-st.markdown("""
-    <div class="app-header">
-        <div class="app-title">GasStation OLAP Analytics Dashboard</div>
-        <div class="app-subtitle">Data Warehouse: Gasstation_dw_duckdb &nbsp;|&nbsp; Target Schema: main</div>
-    </div>
-""", unsafe_allow_html=True)
-
 with st.sidebar:
+    # Profile Avatar Header
+    st.markdown("""
+        <div class="profile-container">
+            <div class="profile-avatar">
+                👤
+                <div class="profile-badge"></div>
+            </div>
+            <div class="profile-name">Executive Admin</div>
+            <div class="profile-role">GasStation Management</div>
+        </div>
+    """, unsafe_allow_html=True)
+
     st.markdown("### Controls")
     
     if not df_sales.empty and "full_date" in df_sales.columns and df_sales["full_date"].notna().any():
@@ -275,6 +336,16 @@ with st.sidebar:
     st.caption(f"Last Refreshed: {datetime.now().strftime('%H:%M:%S')}")
 
 # -----------------------------------------------------------------------------
+# APPLICATION HEADER
+# -----------------------------------------------------------------------------
+st.markdown("""
+    <div class="app-header">
+        <div class="app-title">GasStation OLAP Analytics Dashboard</div>
+        <div class="app-subtitle">Data Warehouse: Gasstation_dw_duckdb &nbsp;|&nbsp; Target Schema: main</div>
+    </div>
+""", unsafe_allow_html=True)
+
+# -----------------------------------------------------------------------------
 # MAIN DASHBOARD TABS
 # -----------------------------------------------------------------------------
 tab1, tab2, tab3, tab4 = st.tabs([
@@ -289,9 +360,9 @@ def apply_corporate_layout(fig):
         height=320,
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(color="#CBD5E1", family="Inter"),
-        xaxis=dict(gridcolor="#334155", zerolinecolor="#334155"),
-        yaxis=dict(gridcolor="#334155", zerolinecolor="#334155"),
+        font=dict(color="#334155", family="Plus Jakarta Sans"),
+        xaxis=dict(gridcolor="#F1F5F9", zerolinecolor="#E2E8F0"),
+        yaxis=dict(gridcolor="#F1F5F9", zerolinecolor="#E2E8F0"),
         margin=dict(l=20, r=20, t=20, b=20)
     )
     return fig
@@ -326,7 +397,7 @@ with tab1:
             st.markdown(f'<div class="insight-card">Executive Summary: สาขาที่มีรายได้สูงสุดคือ <b>{top_b["gasstation_name"]}</b> สร้างรายได้รวม <b>{top_b["total_price"]:,.0f} ₫</b></div>', unsafe_allow_html=True)
             
             fig_q1 = px.bar(rev_branch, x="gasstation_name", y="total_price", text_auto=".2s", labels={"gasstation_name": "Branch", "total_price": "Revenue (VND)"})
-            fig_q1.update_traces(marker_color='#38BDF8', hovertemplate="Branch: %{x}<br>Revenue: %{y:,.0f} ₫")
+            fig_q1.update_traces(marker_color='#2563EB', hovertemplate="Branch: %{x}<br>Revenue: %{y:,.0f} ₫")
             fig_q1 = apply_corporate_layout(fig_q1)
             st.plotly_chart(fig_q1, use_container_width=True)
 
@@ -341,7 +412,7 @@ with tab1:
             top_p = rev_prod.sort_values(by="total_price", ascending=False).iloc[0]
             st.markdown(f'<div class="insight-card">Executive Summary: ผลิตภัณฑ์ที่ทำรายได้หลักคือ <b>{top_p["product_name"]}</b> คิดเป็นสัดส่วนสูงที่สุดของยอดขายน้ำมัน</div>', unsafe_allow_html=True)
             
-            fig_q2 = px.pie(rev_prod, names="product_name", values="total_price", hole=0.4, color_discrete_sequence=['#38BDF8', '#34D399', '#818CF8'])
+            fig_q2 = px.pie(rev_prod, names="product_name", values="total_price", hole=0.45, color_discrete_sequence=['#2563EB', '#3B82F6', '#60A5FA', '#93C5FD'])
             fig_q2.update_traces(hovertemplate="Product: %{label}<br>Revenue: %{value:,.0f} ₫<br>Share: %{percent}")
             fig_q2 = apply_corporate_layout(fig_q2)
             st.plotly_chart(fig_q2, use_container_width=True)
@@ -359,7 +430,7 @@ with tab1:
             st.markdown(f'<div class="insight-card">Executive Summary: ช่วงเวลา Peak Hour ของวันคือ <b>{int(peak_h["hour_24"]):02d}:00 น.</b> มียอดขายสูงสุดที่ <b>{peak_h["total_price"]:,.0f} ₫</b></div>', unsafe_allow_html=True)
             
             fig_q3 = px.line(rev_hour, x="hour_24", y="total_price", markers=True, labels={"hour_24": "Hour (0-23)", "total_price": "Revenue (VND)"})
-            fig_q3.update_traces(line_color='#38BDF8', hovertemplate="Hour: %{x}:00<br>Revenue: %{y:,.0f} ₫")
+            fig_q3.update_traces(line_color='#2563EB', hovertemplate="Hour: %{x}:00<br>Revenue: %{y:,.0f} ₫")
             fig_q3 = apply_corporate_layout(fig_q3)
             st.plotly_chart(fig_q3, use_container_width=True)
 
@@ -375,7 +446,7 @@ with tab1:
             st.markdown(f'<div class="insight-card">Executive Summary: ช่องทางการชำระเงินที่นิยมมากที่สุดคือ <b>{top_pm["payment_method"]}</b> มียอดรวม <b>{top_pm["total_price"]:,.0f} ₫</b></div>', unsafe_allow_html=True)
             
             fig_q4 = px.bar(rev_pm, x="total_price", y="payment_method", orientation="h", text_auto=".2s", labels={"total_price": "Revenue (VND)", "payment_method": "Method"})
-            fig_q4.update_traces(marker_color='#818CF8', hovertemplate="Method: %{y}<br>Revenue: %{x:,.0f} ₫")
+            fig_q4.update_traces(marker_color='#3B82F6', hovertemplate="Method: %{y}<br>Revenue: %{x:,.0f} ₫")
             fig_q4 = apply_corporate_layout(fig_q4)
             st.plotly_chart(fig_q4, use_container_width=True)
 
@@ -401,7 +472,7 @@ with tab2:
             st.markdown('<div class="insight-card">Executive Summary: แสดงระดับปริมาณน้ำมันคงเหลือปัจจุบันแยกตามถัง เพื่อวางแผนสั่งเติมน้ำมันป้องกัน Stockout</div>', unsafe_allow_html=True)
             
             tank_status = df_inv.groupby(["gasstation_name", "tank_name"])["remaining_quantity"].last().reset_index()
-            fig_q6 = px.bar(tank_status, x="tank_name", y="remaining_quantity", color="gasstation_name", labels={"remaining_quantity": "Remaining Stock (L)", "tank_name": "Tank"}, color_discrete_sequence=['#F59E0B', '#FB923C', '#FCD34D'])
+            fig_q6 = px.bar(tank_status, x="tank_name", y="remaining_quantity", color="gasstation_name", labels={"remaining_quantity": "Remaining Stock (L)", "tank_name": "Tank"}, color_discrete_sequence=['#2563EB', '#3B82F6', '#60A5FA'])
             fig_q6.update_traces(hovertemplate="Tank: %{x}<br>Stock: %{y:,.0f} L")
             fig_q6 = apply_corporate_layout(fig_q6)
             st.plotly_chart(fig_q6, use_container_width=True)
@@ -415,7 +486,7 @@ with tab2:
             st.markdown('<div class="insight-card">Executive Summary: เปรียบเทียบสัดส่วนการกระจายปริมาณการรับน้ำมันเข้า (Inflow) ของแต่ละสาขา</div>', unsafe_allow_html=True)
             
             refill_branch = df_inv.groupby("gasstation_name")["quantity_in"].sum().reset_index()
-            fig_q9 = px.pie(refill_branch, names="gasstation_name", values="quantity_in", hole=0.3, color_discrete_sequence=['#F59E0B', '#FB923C', '#FCD34D', '#D97706'])
+            fig_q9 = px.pie(refill_branch, names="gasstation_name", values="quantity_in", hole=0.4, color_discrete_sequence=['#2563EB', '#3B82F6', '#60A5FA', '#93C5FD'])
             fig_q9.update_traces(hovertemplate="Branch: %{label}<br>Inflow: %{value:,.0f} L<br>Share: %{percent}")
             fig_q9 = apply_corporate_layout(fig_q9)
             st.plotly_chart(fig_q9, use_container_width=True)
@@ -437,7 +508,7 @@ with tab3:
             top_e = emp_rev.iloc[0]
             st.markdown(f'<div class="insight-card">Executive Summary: พนักงานที่ทำยอดขายสูงสุดคือ <b>{top_e["employee_name"]}</b> ทำยอดขายรวม <b>{top_e["total_price"]:,.0f} ₫</b></div>', unsafe_allow_html=True)
             
-            fig_q11 = px.bar(emp_rev, x="total_price", y="employee_name", color="gasstation_name", orientation="h", text_auto=".2s", labels={"total_price": "Revenue (VND)", "employee_name": "Employee"}, color_discrete_sequence=['#818CF8', '#A78BFA', '#C084FC'])
+            fig_q11 = px.bar(emp_rev, x="total_price", y="employee_name", color="gasstation_name", orientation="h", text_auto=".2s", labels={"total_price": "Revenue (VND)", "employee_name": "Employee"}, color_discrete_sequence=['#2563EB', '#3B82F6', '#60A5FA'])
             fig_q11.update_traces(hovertemplate="Employee: %{y}<br>Revenue: %{x:,.0f} ₫")
             fig_q11 = apply_corporate_layout(fig_q11)
             st.plotly_chart(fig_q11, use_container_width=True)
@@ -454,7 +525,7 @@ with tab3:
             st.markdown(f'<div class="insight-card">Executive Summary: ประเภทยานพาหนะที่เข้ามาใช้บริการมากที่สุดคือ <b>{top_v["vehicle_type"]}</b> รวม <b>{top_v["invoice_id"]:,} ครั้ง</b></div>', unsafe_allow_html=True)
             
             fig_q13 = px.bar(veh_dist, x="vehicle_type", y="invoice_id", text_auto="d", labels={"invoice_id": "Visits", "vehicle_type": "Vehicle Type"})
-            fig_q13.update_traces(marker_color='#818CF8', hovertemplate="Vehicle: %{x}<br>Visits: %{y:,}")
+            fig_q13.update_traces(marker_color='#2563EB', hovertemplate="Vehicle: %{x}<br>Visits: %{y:,}")
             fig_q13 = apply_corporate_layout(fig_q13)
             st.plotly_chart(fig_q13, use_container_width=True)
 
@@ -471,7 +542,7 @@ with tab3:
             st.markdown(f'<div class="insight-card">Executive Summary: ลูกค้ารายใหญ่ที่สร้างรายได้สูงสุดคือ <b>{top_c["customer_name"]}</b> ยอดซื้อสะสม <b>{top_c["total_price"]:,.0f} ₫</b></div>', unsafe_allow_html=True)
             
             fig_q14 = px.bar(cust_rev, x="customer_name", y="total_price", text_auto=".2s", labels={"customer_name": "Customer", "total_price": "Revenue (VND)"})
-            fig_q14.update_traces(marker_color='#A78BFA', hovertemplate="Customer: %{x}<br>Total Spend: %{y:,.0f} ₫")
+            fig_q14.update_traces(marker_color='#3B82F6', hovertemplate="Customer: %{x}<br>Total Spend: %{y:,.0f} ₫")
             fig_q14 = apply_corporate_layout(fig_q14)
             st.plotly_chart(fig_q14, use_container_width=True)
 
@@ -486,7 +557,7 @@ with tab3:
             top_g = geo_rev.sort_values(by="total_price", ascending=False).iloc[0]
             st.markdown(f'<div class="insight-card">Executive Summary: ภูมิภาคหลักที่ทำรายได้สูงสุดคือ <b>{top_g["station_address"]}</b> มียอดรวม <b>{top_g["total_price"]:,.0f} ₫</b></div>', unsafe_allow_html=True)
             
-            fig_q15 = px.pie(geo_rev, names="station_address", values="total_price", hole=0.3, color_discrete_sequence=['#818CF8', '#A78BFA', '#C084FC', '#6366F1'])
+            fig_q15 = px.pie(geo_rev, names="station_address", values="total_price", hole=0.4, color_discrete_sequence=['#2563EB', '#3B82F6', '#60A5FA', '#93C5FD'])
             fig_q15.update_traces(hovertemplate="Region: %{label}<br>Revenue: %{value:,.0f} ₫<br>Share: %{percent}")
             fig_q15 = apply_corporate_layout(fig_q15)
             st.plotly_chart(fig_q15, use_container_width=True)
@@ -523,9 +594,9 @@ with tab4:
         df_olap = df_sales.groupby(group_cols, as_index=False)[y_col].sum()
         
         if chart_style == "Bar Chart":
-            fig_custom = px.bar(df_olap, x=x_dim, y=y_col, color=color_arg, barmode="group", text_auto=".2s")
+            fig_custom = px.bar(df_olap, x=x_dim, y=y_col, color=color_arg, barmode="group", text_auto=".2s", color_discrete_sequence=['#2563EB', '#3B82F6', '#60A5FA', '#93C5FD'])
         elif chart_style == "Line Chart":
-            fig_custom = px.line(df_olap, x=x_dim, y=y_col, color=color_arg, markers=True)
+            fig_custom = px.line(df_olap, x=x_dim, y=y_col, color=color_arg, markers=True, color_discrete_sequence=['#2563EB', '#3B82F6', '#60A5FA', '#93C5FD'])
         else:
             fig_custom = px.treemap(df_olap, path=group_cols, values=y_col)
 
@@ -533,9 +604,9 @@ with tab4:
             height=420,
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(color="#CBD5E1", family="Inter"),
-            xaxis=dict(gridcolor="#334155"),
-            yaxis=dict(gridcolor="#334155")
+            font=dict(color="#334155", family="Plus Jakarta Sans"),
+            xaxis=dict(gridcolor="#F1F5F9"),
+            yaxis=dict(gridcolor="#F1F5F9")
         )
         st.plotly_chart(fig_custom, use_container_width=True)
         
