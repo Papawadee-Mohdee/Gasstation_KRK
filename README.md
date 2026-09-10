@@ -142,7 +142,7 @@ Gasstation_KRK/
 
 โปรเจกต์นี้ได้รับการพัฒนาและเปิดให้เข้าใช้งานผ่าน Streamlit Web Application ที่รวมทั้งระบบตรวจเช็กคลังข้อมูล (DW Inspector) และแดชบอร์ดวิเคราะห์ธุรกิจ (Executive Analytics) ไว้ในระบบเดียว:
 
-* **Live Demo Web Application:** [เข้าใช้งาน GasStation Enterprise DW & Analytics Studio](https://animated-tribble-r774jrjv4xgjcg6j-8501.app.github.dev/)
+* **Live Demo Web Application:** [เข้าใช้งาน GasStation Enterprise DW & Analytics Studio](https://kdvxcyh5deojv4aewtnmwb.streamlit.app/)
 
 ---
 
