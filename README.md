@@ -196,5 +196,10 @@ Gasstation_KRK/
 Getting Started / Quick Start Guide (คู่มือติดตั้งและรันโปรเจกต์)
 ## Quick Start & Installation
 
+### 1. Prerequisites
+* Python 3.10 ขึ้นไป
+* Git
+
+
 
 
