@@ -7,10 +7,10 @@ import plotly.express as px
 import streamlit as st
 
 # -----------------------------------------------------------------------------
-# PAGE CONFIGURATION & HIGH CONTRAST DARK CSS
+# PAGE CONFIGURATION & MODERN LIGHT EXECUTIVE DESIGN SYSTEM
 # -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="GasStation Data Warehouse Inspector",
+    page_title="GasStation DW Inspector",
     page_icon="▪",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -18,128 +18,187 @@ st.set_page_config(
 
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Sarabun:wght@400;500;600;700&display=swap');
     
     html, body, [class*="css"] {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+        font-family: 'Plus Jakarta Sans', 'Sarabun', -apple-system, sans-serif !important;
     }
     
+    /* Main App Background */
     .stApp {
-        background-color: #0B0F19;
-        color: #F8FAFC;
+        background-color: #F8FAFC;
+        color: #0F172A;
     }
     
+    /* SIDEBAR STYLING */
     [data-testid="stSidebar"] {
-        background-color: #0F172A !important;
-        border-right: 1px solid #1E293B !important;
+        background-color: #FFFFFF !important;
+        border-right: 1px solid #E2E8F0 !important;
+        padding-top: 1rem;
     }
-    [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
-        color: #FFFFFF !important;
-        font-weight: 700 !important;
-    }
+    
     [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] label {
-        color: #E2E8F0 !important;
+        color: #334155 !important;
         font-weight: 500 !important;
     }
+
     [data-testid="stSidebar"] .stCaption {
-        color: #38BDF8 !important;
+        color: #2563EB !important;
         font-weight: 600 !important;
     }
-    [data-testid="stSidebar"] div[data-baseweb="select"] {
-        background-color: #1E293B !important;
-        border-color: #334155 !important;
-        border-radius: 6px !important;
-    }
-    [data-testid="stSidebar"] div[data-baseweb="select"] * {
-        color: #FFFFFF !important;
+
+    /* PROFILE AVATAR CONTAINER */
+    .profile-container {
+        text-align: center;
+        padding: 0.5rem 0 1.25rem 0;
+        border-bottom: 1px solid #F1F5F9;
+        margin-bottom: 1.25rem;
     }
     
+    .profile-avatar {
+        width: 68px;
+        height: 68px;
+        background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+        color: #FFFFFF;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        position: relative;
+        margin: 0 auto;
+    }
+
+    .profile-badge {
+        position: absolute;
+        top: 2px;
+        right: 2px;
+        width: 14px;
+        height: 14px;
+        background-color: #10B981;
+        border: 2px solid #FFFFFF;
+        border-radius: 50%;
+    }
+
+    .profile-name {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #0F172A;
+        margin-top: 0.6rem;
+        letter-spacing: -0.01em;
+    }
+
+    .profile-role {
+        font-size: 0.8rem;
+        color: #64748B;
+        font-weight: 500;
+    }
+    
+    /* HEADER STYLING */
     .app-header {
-        border-bottom: 1px solid #1E293B;
-        padding-bottom: 1.25rem;
+        border-bottom: 1px solid #E2E8F0;
+        padding-bottom: 1rem;
         margin-bottom: 1.5rem;
     }
+    
     .app-title {
         font-size: 1.75rem;
         font-weight: 800;
-        color: #FFFFFF !important;
+        color: #0F172A;
         letter-spacing: -0.025em;
     }
+    
     .app-subtitle {
-        font-size: 0.9rem;
-        color: #94A3B8 !important;
-        font-weight: 500;
+        font-size: 0.875rem;
+        color: #64748B;
         margin-top: 0.25rem;
     }
 
-    .stMainBlockContainer label, .stMainBlockContainer p {
-        color: #E2E8F0 !important;
-    }
-    
+    /* SQL TEXTAREA STYLING */
     .stTextArea textarea {
-        background-color: #1E293B !important;
-        color: #F8FAFC !important;
+        background-color: #FFFFFF !important;
+        color: #0F172A !important;
         font-family: 'JetBrains Mono', monospace !important;
         font-size: 0.95rem !important;
         line-height: 1.5 !important;
-        border: 1px solid #334155 !important;
+        border: 1px solid #CBD5E1 !important;
         border-radius: 8px !important;
     }
     .stTextArea textarea:focus {
-        border-color: #38BDF8 !important;
-        box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2) !important;
+        border-color: #2563EB !important;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
+    }
+
+    /* CARDS & METRIC BOXES */
+    .dashboard-card {
+        background-color: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 1.1rem 1.25rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
+        margin-bottom: 1rem;
     }
 
     .metric-card {
-        background-color: #1E293B;
-        border: 1px solid #334155;
-        border-radius: 8px;
-        padding: 1rem 1.25rem;
+        background-color: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 1.1rem 1.25rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
     }
+    
     .metric-label {
         font-size: 0.75rem;
         font-weight: 700;
-        color: #94A3B8 !important;
+        color: #64748B;
         text-transform: uppercase;
         letter-spacing: 0.05em;
     }
+    
     .metric-value {
         font-size: 1.6rem;
         font-weight: 800;
-        color: #FFFFFF !important;
+        color: #0F172A;
         margin-top: 0.25rem;
     }
 
+    /* TABS STYLING */
     .stTabs [data-baseweb="tab-list"] {
         gap: 8px;
-        border-bottom: 1px solid #1E293B;
+        border-bottom: 1px solid #E2E8F0;
         padding-bottom: 4px;
     }
+    
     .stTabs [data-baseweb="tab"] {
         padding: 8px 18px;
-        border-radius: 6px;
-        font-size: 0.9rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
         font-weight: 600;
-        color: #94A3B8 !important;
+        color: #64748B !important;
         background-color: transparent;
         border: none !important;
     }
+    
     .stTabs [aria-selected="true"] {
-        background-color: #1E293B !important;
-        color: #FFFFFF !important;
-        border-bottom: 2px solid #38BDF8 !important;
+        background-color: #FFFFFF !important;
+        color: #2563EB !important;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08);
+        border-bottom: 2px solid #2563EB !important;
     }
     
-    .stButton > button {
-        background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%) !important;
+    /* BUTTON STYLING */
+    .stButton > button, .stDownloadButton > button {
+        background: #2563EB !important;
         color: #FFFFFF !important;
         font-weight: 600 !important;
         border: none !important;
-        border-radius: 6px !important;
+        border-radius: 8px !important;
         padding: 0.5rem 1.25rem !important;
+        box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2) !important;
     }
-    .stButton > button:hover {
-        background: linear-gradient(135deg, #1D4ED8 0%, #1E40AF 100%) !important;
+    .stButton > button:hover, .stDownloadButton > button:hover {
+        background: #1D4ED8 !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -218,35 +277,54 @@ def run_query(query: str) -> pd.DataFrame:
         return pd.DataFrame()
 
 # -----------------------------------------------------------------------------
-# APPLICATION HEADER
+# SIDEBAR CONTROLS & PROFILE AVATAR
 # -----------------------------------------------------------------------------
-st.markdown("""
-    <div class="app-header">
-        <div class="app-title">GasStation Data Warehouse Inspector</div>
-        <div class="app-subtitle">Environment: Gasstation_dw_duckdb &nbsp;|&nbsp; Target Schema: main</div>
-    </div>
-""", unsafe_allow_html=True)
+with st.sidebar:
+    # Profile Avatar Header
+    st.markdown("""
+        <div class="profile-container">
+            <div class="profile-avatar">
+                👤
+                <div class="profile-badge"></div>
+            </div>
+            <div class="profile-name">Executive Admin</div>
+            <div class="profile-role">GasStation DW Inspector</div>
+        </div>
+    """, unsafe_allow_html=True)
 
-tables_query = """
-    SELECT table_name 
-    FROM information_schema.tables 
-    WHERE table_schema = 'main'
-      AND (
-          table_name LIKE 'stg_%' 
-          OR table_name LIKE 'dim_%' 
-          OR table_name LIKE 'fact_%'
-          OR table_name IN (
-              'Customer', 'Employee', 'GasStation', 
-              'InventoryTransaction', 'Invoice', 'InvoiceDetail', 
-              'Product', 'StorageTank'
+    st.markdown("### Controls")
+    
+    # Query Entity Tables
+    tables_query = """
+        SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_schema = 'main'
+          AND (
+              table_name LIKE 'stg_%' 
+              OR table_name LIKE 'dim_%' 
+              OR table_name LIKE 'fact_%'
+              OR table_name IN (
+                  'Customer', 'Employee', 'GasStation', 
+                  'InventoryTransaction', 'Invoice', 'InvoiceDetail', 
+                  'Product', 'StorageTank'
+              )
           )
-      )
-    ORDER BY table_name;
-"""
+        ORDER BY table_name;
+    """
+    tables_df = run_query(tables_query)
+    tables = tables_df['table_name'].tolist() if not tables_df.empty else []
 
-tables_df = run_query(tables_query)
-tables = tables_df['table_name'].tolist() if not tables_df.empty else []
+    selected_table = st.selectbox("Select Entity Table", tables if tables else ["None"])
+    
+    st.markdown("---")
+    st.markdown("**Backend Status**")
+    st.caption(f"Engine: {engine_status}")
+    st.caption(f"Last Refreshed: {datetime.now().strftime('%H:%M:%S')}")
+    
+    st.markdown("---")
+    preview_limit = st.select_slider("Preview Limit", options=[25, 50, 100, 250, 500, 1000], value=100)
 
+# Calculate Summary Stats
 stats_data = []
 for t in tables:
     count_df = run_query(f'SELECT COUNT(*) as row_count FROM main."{t}"')
@@ -260,19 +338,14 @@ stats_df = pd.DataFrame(stats_data)
 total_records = stats_df['row_count'].sum() if not stats_df.empty else 0
 
 # -----------------------------------------------------------------------------
-# SIDEBAR CONTROLS
+# APPLICATION HEADER
 # -----------------------------------------------------------------------------
-with st.sidebar:
-    st.markdown("### Controls")
-    selected_table = st.selectbox("Select Entity Table", tables if tables else ["None"])
-    st.markdown("---")
-    
-    st.markdown("**Engine Status**")
-    st.caption(engine_status)
-    st.caption(f"Last Refreshed: {datetime.now().strftime('%H:%M:%S')}")
-    
-    st.markdown("---")
-    preview_limit = st.select_slider("Preview Limit", options=[25, 50, 100, 250, 500, 1000], value=100)
+st.markdown("""
+    <div class="app-header">
+        <div class="app-title">GasStation Data Warehouse Inspector</div>
+        <div class="app-subtitle">Environment: Gasstation_dw_duckdb &nbsp;|&nbsp; Target Schema: main</div>
+    </div>
+""", unsafe_allow_html=True)
 
 # -----------------------------------------------------------------------------
 # MAIN CONTENTS TABS
@@ -290,7 +363,7 @@ with tab1:
         largest = stats_df.loc[stats_df['row_count'].idxmax()]['table_name'] if not stats_df.empty else "-"
         st.markdown(f'<div class="metric-card"><div class="metric-label">Largest Entity</div><div class="metric-value" style="font-size:1.2rem;">{largest}</div></div>', unsafe_allow_html=True)
     with m4:
-        st.markdown(f'<div class="metric-card"><div class="metric-label">Backend Engine</div><div class="metric-value" style="font-size:1.1rem; font-weight:600; color:#38BDF8 !important;">DuckDB</div></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="metric-card"><div class="metric-label">Backend Engine</div><div class="metric-value" style="font-size:1.15rem; font-weight:700; color:#2563EB !important;">DuckDB</div></div>', unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
     
@@ -310,15 +383,15 @@ with tab1:
             fig.update_traces(
                 texttemplate='%{text:,}', 
                 textposition='outside', 
-                marker_color='#38BDF8'
+                marker_color='#2563EB'
             )
             fig.update_layout(
-                height=450,
+                height=420,
                 margin=dict(l=0, r=20, t=10, b=0),
                 paper_bgcolor="rgba(0,0,0,0)",
                 plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#CBD5E1", family="Plus Jakarta Sans"),
-                xaxis=dict(showgrid=True, gridcolor="#1E293B"),
+                font=dict(color="#4B5563", family="Plus Jakarta Sans"),
+                xaxis=dict(showgrid=True, gridcolor="#F1F5F9"),
                 yaxis=dict(showgrid=False)
             )
             st.plotly_chart(fig, use_container_width=True)
@@ -329,7 +402,7 @@ with tab1:
                 stats_df.rename(columns={"table_name": "Table Name", "row_count": "Row Count", "column_count": "Columns"}),
                 use_container_width=True,
                 hide_index=True,
-                height=450
+                height=420
             )
 
 # TAB 2: SCHEMA & PREVIEW
@@ -373,7 +446,7 @@ with tab2:
 # TAB 3: SQL CONSOLE
 with tab3:
     st.markdown("#### SQL Query Console")
-    st.caption("Execute read-only SQL queries directly against the DuckDB instance.")
+    st.caption("Execute read-only SQL queries directly against the DuckDB Data Warehouse instance.")
     
     default_sql = f'SELECT * FROM main."{selected_table}" LIMIT 20;' if selected_table != "None" else "SELECT 1;"
     user_sql = st.text_area("SQL Statement", value=default_sql, height=130)
