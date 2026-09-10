@@ -3,7 +3,7 @@
 > **Group:** Project Group 1
 
 โครงงานออกแบบและพัฒนาคลังข้อมูล (Data Warehouse) จากระบบ OLTP สู่ OLAP สำหรับธุรกิจปั๊มน้ำมัน (GasStationDB) เพื่อตอบคำถามทางธุรกิจและสร้าง Interactive Dashboard
-2345
+
 ---
 
 ## สมาชิกในกลุ่ม 
