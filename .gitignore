@@ -17,4 +17,7 @@ Thumbs.db
 .vscode/
 
 # Environment Variables
-.envGasstation_dw_duckdb/dev.duckdb
+.env
+
+# Compiled data warehouse (regenerate locally with `dbt run`, or let the app build it from the CSVs)
+Gasstation_dw_duckdb/dev.duckdb
