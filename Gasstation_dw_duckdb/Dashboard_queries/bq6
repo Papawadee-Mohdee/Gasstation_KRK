@@ -1,0 +1,11 @@
+-- สถานีที่ออกบิลใช้ Invoice.GasStationID; เก็บสถานีสังกัดไว้เทียบต่างหาก
+with source as (
+    select i.gas_station_id,s.gas_station_name,i.employee_id,e.employee_name,
+        e.assigned_gas_station_id,count(*) as invoice_count,
+        sum(case when i.gas_station_id<>e.assigned_gas_station_id then 1 else 0 end) as different_station_invoices
+    from selected_invoices i
+    left join selected_stations s using(gas_station_id)
+    left join dim_employees e using(employee_id)
+    group by 1,2,3,4,5
+)
+select *,dense_rank() over(partition by gas_station_id order by invoice_count desc) as employee_rank from source

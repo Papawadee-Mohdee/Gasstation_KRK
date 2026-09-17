@@ -1,0 +1,8 @@
+with source as (
+    select s.gas_station_id,s.gas_station_name,coalesce(sum(i.total_amount),0) as total_sales,
+        coalesce(sum(case when i.payment_method='Credit Card' then i.total_amount else 0 end),0) as credit_card_sales
+    from selected_stations s left join selected_invoices i using(gas_station_id) group by 1,2
+)
+select *,(select fee_rate from settings) as assumed_fee_rate,
+    credit_card_sales*(select fee_rate from settings) as simulated_fee,
+    100.0*credit_card_sales*(select fee_rate from settings)/nullif(total_sales,0) as fee_share_of_sales_pct from source

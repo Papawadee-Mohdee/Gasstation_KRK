@@ -1,0 +1,12 @@
+with source as (
+    select street,count(distinct gas_station_id) as station_count,sum(sales_amount) as total_sales
+    from (select s.gas_station_id,s.gas_station_name,s.street,d.date_id,d.date_day,
+d.weekday_number,d.weekday_name,d.day_type,
+coalesce(sum(f.total_amount),0) as sales_amount,count(f.invoice_id) as invoice_count
+from selected_stations s cross join selected_dates d
+left join selected_invoices f on s.gas_station_id=f.gas_station_id and d.date_id=f.date_id
+group by 1,2,3,4,5,6,7,8) group by 1
+)
+select *,total_sales/nullif(station_count,0) as sales_per_station,
+    dense_rank() over(order by total_sales desc) as highest_rank,
+    dense_rank() over(order by total_sales) as lowest_rank from source

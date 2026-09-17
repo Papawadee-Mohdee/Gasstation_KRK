@@ -1,28 +1,21 @@
-with bounds as (
+with source as (
     select
-        min(d) as min_d,
-        max(d) as max_d
-    from (
-        select cast(issue_date as date) as d from {{ ref('stg_Invoice') }}
-        union all
-        select cast(transaction_date as date) as d from {{ ref('stg_InventoryTransaction') }}
-    )
+    cast(strptime(IssueDate, '%d/%m/%Y %H:%M') as date) as date_day
+    from {{ ref('stg_invoice') }}
+
+    union
+
+    select
+    cast(strptime(TransactionDate, '%d/%m/%Y %H:%M') as date) as date_day
+    from {{ ref('stg_inventorytransaction') }}
 ),
-days as (
-    select generate_series::date as full_date
-    from bounds, generate_series(bounds.min_d, bounds.max_d, interval 1 day)
+date_spine as (
+    select unnest(generate_series(min(date_day), max(date_day), interval 1 day))::date as date_day
+    from source
 )
-select
-    cast(strftime(full_date, '%Y%m%d') as integer) as date_key,
-    full_date,
-    extract(year from full_date)      as year,
-    extract(quarter from full_date)   as quarter,
-    extract(month from full_date)     as month,
-    strftime(full_date, '%B')         as month_name,
-    extract(day from full_date)       as day_of_month,
-    extract(isodow from full_date)    as iso_day_of_week,
-    strftime(full_date, '%A')         as day_name,
-    case when extract(isodow from full_date) in (6,7)
-         then true else false end     as is_weekend
-from days
-order by full_date
+select strftime(date_day, '%Y%m%d')::integer as date_id, date_day,
+    year(date_day) as year, quarter(date_day) as quarter,
+    month(date_day) as month, day(date_day) as day,
+    isodow(date_day) as weekday_number, dayname(date_day) as weekday_name,
+    case when isodow(date_day) in (6,7) then 'Weekend' else 'Weekday' end as day_type
+from date_spine

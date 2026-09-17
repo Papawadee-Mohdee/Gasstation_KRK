@@ -1,0 +1,11 @@
+with methods as (
+    select distinct payment_method from selected_invoices
+), source as (
+    select s.gas_station_id,s.gas_station_name,m.payment_method,count(i.invoice_id) as invoice_count,
+        coalesce(sum(i.total_amount),0) as sales_amount
+    from selected_stations s cross join methods m
+    left join selected_invoices i on s.gas_station_id=i.gas_station_id and m.payment_method=i.payment_method
+    group by 1,2,3
+)
+select *,100.0*invoice_count/nullif(sum(invoice_count) over(partition by gas_station_id),0) as invoice_share_pct
+from source

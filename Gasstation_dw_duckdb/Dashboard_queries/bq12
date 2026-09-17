@@ -1,0 +1,17 @@
+with source as (
+    select *,row_number() over(partition by tank_id order by transaction_timestamp desc,transaction_id desc) as row_num
+    from selected_inventory
+)
+select t.tank_id,t.tank_name,t.gas_station_id,g.gas_station_name,t.product_id,
+    t.capacity,s.transaction_timestamp as latest_transaction_timestamp,
+    s.transaction_id as latest_transaction_id,s.remaining_quantity,
+    t.current_quantity_snapshot,s.remaining_quantity-t.current_quantity_snapshot as snapshot_difference,
+    100.0*s.remaining_quantity/nullif(t.capacity,0) as remaining_pct,
+    case when s.transaction_id is null then 'no_inventory_history'
+        when t.capacity is null or t.capacity<=0 then 'invalid_capacity'
+        when s.remaining_quantity is null then 'missing_balance'
+        when s.remaining_quantity<0 then 'negative_balance'
+        when s.remaining_quantity>(select warning_ratio from settings)*t.capacity then 'normal'
+        else 'low_stock' end as alert_status
+from (select * from dim_tanks where gas_station_id in (select gas_station_id from selected_stations)) t left join source s on t.tank_id=s.tank_id and s.row_num=1
+left join selected_stations g on t.gas_station_id=g.gas_station_id

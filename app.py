@@ -1,462 +1,436 @@
-from datetime import datetime
-import os
 from pathlib import Path
+
 import duckdb
-import pandas as pd
-import plotly.express as px
 import streamlit as st
 
-# -----------------------------------------------------------------------------
-# PAGE CONFIGURATION & MODERN LIGHT EXECUTIVE DESIGN SYSTEM
-# -----------------------------------------------------------------------------
+# ---------------------------------------------------------
+# Path
+# app.py อยู่ที่ /workspaces/Gasstation_KRK/
+# DuckDB อยู่ที่ /workspaces/Gasstation_KRK/Gasstation_dw_duckdb/dev.duckdb
+# ---------------------------------------------------------
+ROOT = Path(__file__).resolve().parent
+DB_PATH = ROOT / "Gasstation_dw_duckdb" / "dev.duckdb"
+
+# ---------------------------------------------------------
+# Import dashboard helpers
+# รองรับทั้ง Dashboard.py และ dashboard.py
+# ---------------------------------------------------------
+if (ROOT / "Dashboard.py").exists():
+    from Dashboard import (
+        TITLES,
+        DIMENSIONS,
+        PRODUCT_DIMENSIONS,
+        question_query,
+        explore_query,
+    )
+elif (ROOT / "dashboard.py").exists():
+    from dashboard import (
+        TITLES,
+        DIMENSIONS,
+        PRODUCT_DIMENSIONS,
+        question_query,
+        explore_query,
+    )
+else:
+    st.error(
+        "ไม่พบไฟล์ Dashboard.py หรือ dashboard.py ในโฟลเดอร์เดียวกับ app.py"
+    )
+    st.code(str(ROOT), language="text")
+    st.stop()
+
+
+# ---------------------------------------------------------
+# Streamlit config
+# ---------------------------------------------------------
 st.set_page_config(
-    page_title="GasStation DW Inspector",
-    page_icon="▪",
+    page_title="Gas Station Dim Fact",
     layout="wide",
-    initial_sidebar_state="expanded"
 )
 
-st.markdown("""
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Sarabun:wght@400;500;600;700&display=swap');
-    
-    html, body, [class*="css"] {
-        font-family: 'Plus Jakarta Sans', 'Sarabun', -apple-system, sans-serif !important;
-    }
-    
-    /* Main App Background */
-    .stApp {
-        background-color: #F8FAFC;
-        color: #0F172A;
-    }
-    
-    /* SIDEBAR STYLING */
-    [data-testid="stSidebar"] {
-        background-color: #FFFFFF !important;
-        border-right: 1px solid #E2E8F0 !important;
-        padding-top: 1rem;
-    }
-    
-    [data-testid="stSidebar"] p, [data-testid="stSidebar"] span, [data-testid="stSidebar"] label {
-        color: #334155 !important;
-        font-weight: 500 !important;
-    }
+st.title("วิเคราะห์สถานีบริการน้ำมันจาก Dim และ Fact")
 
-    [data-testid="stSidebar"] .stCaption {
-        color: #2563EB !important;
-        font-weight: 600 !important;
-    }
 
-    /* PROFILE AVATAR CONTAINER */
-    .profile-container {
-        text-align: center;
-        padding: 0.5rem 0 1.25rem 0;
-        border-bottom: 1px solid #F1F5F9;
-        margin-bottom: 1.25rem;
-    }
-    
-    .profile-avatar {
-        width: 68px;
-        height: 68px;
-        background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
-        color: #FFFFFF;
-        border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 2rem;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
-        position: relative;
-        margin: 0 auto;
-    }
+# ---------------------------------------------------------
+# ตรวจสอบฐานข้อมูล
+# ---------------------------------------------------------
+if not DB_PATH.exists():
+    st.error(f"ไม่พบฐานข้อมูล: {DB_PATH}")
+    st.info(
+        "ให้เข้าโฟลเดอร์ Gasstation_dw_duckdb แล้วรัน `dbt run` "
+        "ให้สำเร็จก่อนเปิด Dashboard"
+    )
+    st.stop()
 
-    .profile-badge {
-        position: absolute;
-        top: 2px;
-        right: 2px;
-        width: 14px;
-        height: 14px;
-        background-color: #10B981;
-        border: 2px solid #FFFFFF;
-        border-radius: 50%;
-    }
 
-    .profile-name {
-        font-size: 1rem;
-        font-weight: 800;
-        color: #0F172A;
-        margin-top: 0.6rem;
-        letter-spacing: -0.01em;
-    }
+# ---------------------------------------------------------
+# เชื่อมต่อ DuckDB
+# ---------------------------------------------------------
+with duckdb.connect(str(DB_PATH), read_only=True) as con:
 
-    .profile-role {
-        font-size: 0.8rem;
-        color: #64748B;
-        font-weight: 500;
-    }
-    
-    /* HEADER STYLING */
-    .app-header {
-        border-bottom: 1px solid #E2E8F0;
-        padding-bottom: 1rem;
-        margin-bottom: 1.5rem;
-    }
-    
-    .app-title {
-        font-size: 1.75rem;
-        font-weight: 800;
-        color: #0F172A;
-        letter-spacing: -0.025em;
-    }
-    
-    .app-subtitle {
-        font-size: 0.875rem;
-        color: #64748B;
-        margin-top: 0.25rem;
-    }
+    # -----------------------------------------------------
+    # ช่วงวันที่จาก fact_invoices
+    # -----------------------------------------------------
+    lo, hi = con.execute(
+        """
+        select
+            min(issue_timestamp)::date,
+            max(issue_timestamp)::date
+        from fact_invoices
+        """
+    ).fetchone()
 
-    /* SQL TEXTAREA STYLING */
-    .stTextArea textarea {
-        background-color: #FFFFFF !important;
-        color: #0F172A !important;
-        font-family: 'JetBrains Mono', monospace !important;
-        font-size: 0.95rem !important;
-        line-height: 1.5 !important;
-        border: 1px solid #CBD5E1 !important;
-        border-radius: 8px !important;
-    }
-    .stTextArea textarea:focus {
-        border-color: #2563EB !important;
-        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15) !important;
-    }
+    if lo is None or hi is None:
+        st.error("ไม่พบข้อมูลวันที่ใน fact_invoices")
+        st.stop()
 
-    /* CARDS & METRIC BOXES */
-    .dashboard-card {
-        background-color: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 12px;
-        padding: 1.1rem 1.25rem;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04);
-        margin-bottom: 1rem;
-    }
+    # -----------------------------------------------------
+    # รายชื่อสถานี
+    # ชื่อตารางจริงคือ dim_gasstation ไม่ใช่ dim_gasstations
+    # -----------------------------------------------------
+    stations = con.execute(
+        """
+        select
+            gas_station_id,
+            gas_station_name
+        from dim_gasstation
+        order by gas_station_id
+        """
+    ).fetchall()
 
-    .metric-card {
-        background-color: #FFFFFF;
-        border: 1px solid #E2E8F0;
-        border-radius: 12px;
-        padding: 1.1rem 1.25rem;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
-    }
-    
-    .metric-label {
-        font-size: 0.75rem;
-        font-weight: 700;
-        color: #64748B;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-    
-    .metric-value {
-        font-size: 1.6rem;
-        font-weight: 800;
-        color: #0F172A;
-        margin-top: 0.25rem;
-    }
+    labels = dict(stations)
 
-    /* TABS STYLING */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        border-bottom: 1px solid #E2E8F0;
-        padding-bottom: 4px;
-    }
-    
-    .stTabs [data-baseweb="tab"] {
-        padding: 8px 18px;
-        border-radius: 8px;
-        font-size: 0.875rem;
-        font-weight: 600;
-        color: #64748B !important;
-        background-color: transparent;
-        border: none !important;
-    }
-    
-    .stTabs [aria-selected="true"] {
-        background-color: #FFFFFF !important;
-        color: #2563EB !important;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08);
-        border-bottom: 2px solid #2563EB !important;
-    }
-    
-    /* BUTTON STYLING */
-    .stButton > button, .stDownloadButton > button {
-        background: #2563EB !important;
-        color: #FFFFFF !important;
-        font-weight: 600 !important;
-        border: none !important;
-        border-radius: 8px !important;
-        padding: 0.5rem 1.25rem !important;
-        box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2) !important;
-    }
-    .stButton > button:hover, .stDownloadButton > button:hover {
-        background: #1D4ED8 !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
+    if not labels:
+        st.error("ไม่พบข้อมูลสถานีใน dim_gasstation")
+        st.stop()
 
-# -----------------------------------------------------------------------------
-# DATABASE ENGINE & DYNAMIC PATH SEARCH MANAGEMENT
-# -----------------------------------------------------------------------------
-CURRENT_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = CURRENT_DIR.parent if CURRENT_DIR.name == "pages" else CURRENT_DIR
+    # -----------------------------------------------------
+    # Sidebar filters
+    # -----------------------------------------------------
+    date_range = st.sidebar.date_input(
+        "ช่วงวันที่",
+        value=(lo, hi),
+        min_value=lo,
+        max_value=hi,
+    )
 
-candidate_db_paths = [
-    PROJECT_ROOT / "Gasstation_dw_duckdb" / "dev.duckdb",
-    PROJECT_ROOT / "dev.duckdb",
-    Path.cwd() / "Gasstation_dw_duckdb" / "dev.duckdb",
-    Path.cwd() / "dev.duckdb",
-]
+    if len(date_range) != 2:
+        st.info("เลือกวันเริ่มและวันสิ้นสุด")
+        st.stop()
 
-DB_PATH = None
-for candidate in candidate_db_paths:
-    if candidate.exists():
-        DB_PATH = candidate
-        break
+    start, end = date_range
 
-CSV_DIR = PROJECT_ROOT / "Gasstation_dw_duckdb"
+    chosen = st.sidebar.multiselect(
+        "สถานี (ว่าง = ทุกสถานี)",
+        list(labels),
+        format_func=lambda station_id: labels[station_id],
+    )
 
-@st.cache_resource
-def init_database():
-    if DB_PATH and os.path.exists(DB_PATH):
-        try:
-            conn = duckdb.connect(str(DB_PATH), read_only=True)
-            tables = conn.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'").fetchall()
-            if len(tables) > 0:
-                return conn, "khorakhung engine"
-        except Exception:
-            pass
-            
-    conn = duckdb.connect(":memory:")
-    csv_entities = {
-        "Customer": CSV_DIR / "Customer.csv",
-        "Employee": CSV_DIR / "Employee.csv",
-        "GasStation": CSV_DIR / "GasStation.csv",
-        "Invoice": CSV_DIR / "Invoice.csv",
-        "InvoiceDetail": CSV_DIR / "InvoiceDetail.csv",
-        "InventoryTransaction": CSV_DIR / "InventoryTransaction.csv",
-        "Product": CSV_DIR / "Product.csv",
-        "StorageTank": CSV_DIR / "StorageTank.csv"
-    }
-    
-    loaded_any = False
-    for entity_name, path in csv_entities.items():
-        if os.path.exists(path):
-            conn.execute(f"CREATE TABLE {entity_name} AS SELECT * FROM read_csv_auto('{path}')")
-            loaded_any = True
-            
-    if loaded_any:
-        return conn, "CSV Engine Driver"
-        
-    conn.execute("""
-        CREATE TABLE Customer AS SELECT i AS CustomerID, 'Customer ' || i AS CustomerName FROM range(1, 1001) t(i);
-        CREATE TABLE Employee AS SELECT i AS EmployeeID, 'Employee ' || i AS EmployeeName FROM range(1, 52) t(i);
-        CREATE TABLE GasStation AS SELECT i AS GasStationID, 'Station ' || i AS GasStationName FROM range(1, 11) t(i);
-        CREATE TABLE Invoice AS SELECT i AS InvoiceID, (i%1000)+1 AS CustomerID FROM range(1, 9674) t(i);
-        CREATE TABLE InvoiceDetail AS SELECT i AS DetailID, (i%9673)+1 AS InvoiceID FROM range(1, 23608) t(i);
-        CREATE TABLE InventoryTransaction AS SELECT i AS TransactionID FROM range(1, 23612) t(i);
-        CREATE TABLE Product AS SELECT i AS ProductID, 'Product ' || i AS ProductName FROM range(1, 4) t(i);
-        CREATE TABLE StorageTank AS SELECT i AS TankID FROM range(1, 31) t(i);
-    """)
-    return conn, "khorakhung engine (Simulation)"
+    chosen = chosen or list(labels)
 
-conn, engine_status = init_database()
+    mode = st.sidebar.radio(
+        "รูปแบบการวิเคราะห์",
+        [
+            "เลือกมิติและตัวชี้วัดเอง",
+            "มุมมองสำหรับ Business Questions",
+        ],
+    )
 
-def run_query(query: str) -> pd.DataFrame:
-    try:
-        return conn.execute(query).fetch_df()
-    except Exception:
-        return pd.DataFrame()
+    st.caption(
+        f"{start} ถึง {end} • "
+        f"{len(chosen)} สถานี • "
+        "หน่วยเงินตามต้นทาง"
+    )
 
-# -----------------------------------------------------------------------------
-# SIDEBAR CONTROLS & PROFILE AVATAR
-# -----------------------------------------------------------------------------
-with st.sidebar:
-    # Profile Avatar Header
-    st.markdown("""
-        <div class="profile-container">
-            <div class="profile-avatar">
-                👤
-                <div class="profile-badge"></div>
-            </div>
-            <div class="profile-name">Executive Admin</div>
-            <div class="profile-role">GasStation DW Inspector</div>
-        </div>
-    """, unsafe_allow_html=True)
+    # =====================================================
+    # MODE 1 : Explore Dim / Fact
+    # =====================================================
+    if mode == "เลือกมิติและตัวชี้วัดเอง":
 
-    st.markdown("### Controls")
-    
-    # Query Entity Tables
-    tables_query = """
-        SELECT table_name 
-        FROM information_schema.tables 
-        WHERE table_schema = 'main'
-          AND (
-              table_name LIKE 'stg_%' 
-              OR table_name LIKE 'dim_%' 
-              OR table_name LIKE 'fact_%'
-              OR table_name IN (
-                  'Customer', 'Employee', 'GasStation', 
-                  'InventoryTransaction', 'Invoice', 'InvoiceDetail', 
-                  'Product', 'StorageTank'
-              )
-          )
-        ORDER BY table_name;
-    """
-    tables_df = run_query(tables_query)
-    tables = tables_df['table_name'].tolist() if not tables_df.empty else []
+        grain = st.selectbox(
+            "ระดับข้อมูล",
+            ["invoices", "sales"],
+            format_func=lambda x: (
+                "ใบเสร็จ"
+                if x == "invoices"
+                else "รายการสินค้า"
+            ),
+        )
 
-    selected_table = st.selectbox("Select Entity Table", tables if tables else ["None"])
-    
-    st.markdown("---")
-    st.markdown("**Backend Status**")
-    st.caption(f"Engine: {engine_status}")
-    st.caption(f"Last Refreshed: {datetime.now().strftime('%H:%M:%S')}")
-    
-    st.markdown("---")
-    preview_limit = st.select_slider("Preview Limit", options=[25, 50, 100, 250, 500, 1000], value=100)
+        options = list(DIMENSIONS)
 
-# Calculate Summary Stats
-stats_data = []
-for t in tables:
-    count_df = run_query(f'SELECT COUNT(*) as row_count FROM main."{t}"')
-    row_cnt = count_df['row_count'].iloc[0] if (not count_df.empty and 'row_count' in count_df.columns) else 0
-    
-    schema_df = run_query(f'PRAGMA table_info(\'main."{t}"\')')
-    col_cnt = len(schema_df) if not schema_df.empty else 0
-    stats_data.append({"table_name": t, "row_count": row_cnt, "column_count": col_cnt})
+        if grain == "sales":
+            options += list(PRODUCT_DIMENSIONS)
+        else:
+            options += ["วิธีชำระเงิน"]
 
-stats_df = pd.DataFrame(stats_data)
-total_records = stats_df['row_count'].sum() if not stats_df.empty else 0
+        dims = st.multiselect(
+            "เลือกมิติ 1–2 มิติ",
+            options,
+            default=["สถานี"],
+            max_selections=2,
+        )
 
-# -----------------------------------------------------------------------------
-# APPLICATION HEADER
-# -----------------------------------------------------------------------------
-st.markdown("""
-    <div class="app-header">
-        <div class="app-title">GasStation Data Warehouse Inspector</div>
-        <div class="app-subtitle">Environment: Gasstation_dw_duckdb &nbsp;|&nbsp; Target Schema: main</div>
-    </div>
-""", unsafe_allow_html=True)
+        metric_options = [
+            "ยอดขาย",
+            "จำนวนบิล",
+        ]
 
-# -----------------------------------------------------------------------------
-# MAIN CONTENTS TABS
-# -----------------------------------------------------------------------------
-tab1, tab2, tab3 = st.tabs(["Overview", "Schema & Data Inspector", "SQL Console"])
+        if grain == "sales":
+            metric_options.append("ปริมาณเชื้อเพลิง (ลิตร)")
 
-# TAB 1: OVERVIEW
-with tab1:
-    m1, m2, m3, m4 = st.columns(4)
-    with m1:
-        st.markdown(f'<div class="metric-card"><div class="metric-label">Tables Count</div><div class="metric-value">{len(tables)}</div></div>', unsafe_allow_html=True)
-    with m2:
-        st.markdown(f'<div class="metric-card"><div class="metric-label">Total Records</div><div class="metric-value">{total_records:,}</div></div>', unsafe_allow_html=True)
-    with m3:
-        largest = stats_df.loc[stats_df['row_count'].idxmax()]['table_name'] if not stats_df.empty else "-"
-        st.markdown(f'<div class="metric-card"><div class="metric-label">Largest Entity</div><div class="metric-value" style="font-size:1.2rem;">{largest}</div></div>', unsafe_allow_html=True)
-    with m4:
-        st.markdown(f'<div class="metric-card"><div class="metric-label">Backend Engine</div><div class="metric-value" style="font-size:1.15rem; font-weight:700; color:#2563EB !important;">DuckDB</div></div>', unsafe_allow_html=True)
+        metric = st.selectbox(
+            "ตัวชี้วัด",
+            metric_options,
+        )
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    
-    if not stats_df.empty:
-        col_chart, col_side = st.columns([1.6, 1])
-        
-        with col_chart:
-            st.markdown("#### Record Volume Distribution")
-            fig = px.bar(
-                stats_df.sort_values(by="row_count", ascending=True),
-                x="row_count",
-                y="table_name",
-                orientation="h",
-                text="row_count",
-                labels={"row_count": "Record Count", "table_name": "Entity Name"}
-            )
-            fig.update_traces(
-                texttemplate='%{text:,}', 
-                textposition='outside', 
-                marker_color='#2563EB'
-            )
-            fig.update_layout(
-                height=420,
-                margin=dict(l=0, r=20, t=10, b=0),
-                paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#4B5563", family="Plus Jakarta Sans"),
-                xaxis=dict(showgrid=True, gridcolor="#F1F5F9"),
-                yaxis=dict(showgrid=False)
-            )
-            st.plotly_chart(fig, use_container_width=True)
-            
-        with col_side:
-            st.markdown("#### Table Inventory")
-            st.dataframe(
-                stats_df.rename(columns={"table_name": "Table Name", "row_count": "Row Count", "column_count": "Columns"}),
-                use_container_width=True,
-                hide_index=True,
-                height=420
+        if not dims:
+            st.info("เลือกอย่างน้อยหนึ่งมิติ")
+            st.stop()
+
+        sql, params = explore_query(
+            grain,
+            dims,
+            metric,
+            start,
+            end,
+            chosen,
+        )
+
+        df = con.execute(sql, params).fetch_df()
+
+        if metric == "จำนวนบิล" and grain == "sales":
+            st.caption(
+                "นับบิลไม่ซ้ำภายในแต่ละกลุ่ม "
+                "บิลเดียวอาจซื้อหลายสินค้า "
+                "จึงห้ามบวกจำนวนบิลข้ามกลุ่มสินค้า"
             )
 
-# TAB 2: SCHEMA & PREVIEW
-with tab2:
-    if selected_table != "None":
-        st.markdown(f"#### Entity Profile: `{selected_table}`")
-        
-        schema_df = run_query(f'PRAGMA table_info(\'main."{selected_table}"\')')
-        preview_df = run_query(f'SELECT * FROM main."{selected_table}" LIMIT {preview_limit}')
-        
-        col_main, col_info = st.columns([2.8, 1.2])
-        
-        with col_main:
-            st.markdown(f"**Records Preview** (First {len(preview_df)} rows)")
-            
-            search_query = st.text_input("Filter preview records:", "", placeholder="Type keywords to filter...")
-            if search_query and not preview_df.empty:
-                filter_mask = preview_df.astype(str).apply(lambda x: x.str.contains(search_query, case=False, na=False)).any(axis=1)
-                preview_df = preview_df[filter_mask]
-                
-            st.dataframe(preview_df, use_container_width=True, hide_index=True)
-            
-            csv_bytes = preview_df.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label=f"Export {selected_table} (CSV)",
-                data=csv_bytes,
-                file_name=f"{selected_table}_export.csv",
-                mime="text/csv"
+        if metric == "ปริมาณเชื้อเพลิง (ลิตร)":
+            st.caption(
+                "นับลิตรเฉพาะ Gasoline และ Diesel "
+                "สินค้าประเภทอื่นไม่รวมในตัวชี้วัดนี้"
             )
-            
-        with col_info:
-            st.markdown("**Schema Metadata**")
-            if not schema_df.empty:
-                st.dataframe(
-                    schema_df[['name', 'type', 'notnull']].rename(columns={"name": "Column", "type": "Type", "notnull": "NotNull"}),
-                    use_container_width=True,
-                    hide_index=True,
-                    height=420
+
+        if not df.empty:
+
+            plot = df.copy()
+
+            plot["axis_1"] = plot["axis_1"].astype(str)
+
+            if len(dims) == 2:
+
+                plot["axis_2"] = plot["axis_2"].astype(str)
+
+                chart = plot.pivot(
+                    index="axis_1",
+                    columns="axis_2",
+                    values="value",
+                ).fillna(0)
+
+            else:
+
+                chart = plot.set_index("axis_1")[["value"]]
+
+            if dims[0] in ["วันที่", "เดือน", "ชั่วโมง"]:
+                st.line_chart(chart)
+            else:
+                st.bar_chart(chart)
+
+        else:
+            st.warning("ไม่พบข้อมูลตามเงื่อนไขที่เลือก")
+
+        st.caption(
+            "เปลี่ยนมิติเพื่อดูยอดตามถนน ชั่วโมง สินค้า "
+            "พนักงาน หรือประเภทรถได้ โดยใช้ Fact ชุดเดียวกัน"
+        )
+
+    # =====================================================
+    # MODE 2 : Business Questions
+    # =====================================================
+    else:
+
+        n = st.selectbox(
+            "คำถาม",
+            list(TITLES),
+            format_func=lambda i: f"{i}. {TITLES[i]}",
+        )
+
+        fee = (
+            st.number_input(
+                "ค่าธรรมเนียมบัตร (%)",
+                min_value=0.0,
+                max_value=100.0,
+                value=2.0,
+            )
+            / 100
+            if n == 14
+            else 0.02
+        )
+
+        threshold = (
+            st.number_input(
+                "เกณฑ์เตือนระดับถัง (%)",
+                min_value=0.0,
+                max_value=100.0,
+                value=20.0,
+            )
+            / 100
+            if n == 12
+            else 0.20
+        )
+
+        sql, params = question_query(
+            n,
+            start,
+            end,
+            chosen,
+            fee_rate=fee,
+            warning_ratio=threshold,
+        )
+
+        df = con.execute(sql, params).fetch_df()
+
+        notes = {
+            1: (
+                "กลุ่ม High / Medium / Low เป็นเกณฑ์ percentile "
+                "ที่สมมติขึ้น และคำนวณใหม่ตามช่วงวันและสถานีที่เลือก"
+            ),
+            5: (
+                "เปรียบเทียบค่าเฉลี่ยต่อวันเพราะจำนวนวันไม่เท่ากัน "
+                "กราฟนี้ยังไม่ใช่ผลทดสอบนัยสำคัญทางสถิติ"
+            ),
+            11: (
+                "ส่วนต่างเป็นประเด็นให้ตรวจสอบ ไม่ใช่หลักฐานการสูญหาย "
+                "สินค้าของถังอนุมานจากชื่อถัง"
+            ),
+            12: (
+                "ใช้ประวัติทั้งหมดถึงวันสิ้นสุดที่เลือก ไม่จำกัดวันเริ่ม "
+                "CurrentQuantity เป็น master snapshot ของไฟล์ "
+                "ไม่ใช่ยอด ณ วันสิ้นสุดที่เลือก"
+            ),
+            13: (
+                "จำนวนคนจาก master snapshot ไม่เปลี่ยนตามตัวกรองวัน "
+                "เพราะไม่มีประวัติกะและการย้ายพนักงาน"
+            ),
+            15: (
+                "จำนวนพนักงานจาก master snapshot "
+                "ไม่มีข้อมูลกะหรือเกณฑ์ภาระงาน "
+                "จึงยังสรุปความเพียงพอไม่ได้"
+            ),
+        }
+
+        if n in notes:
+            st.info(notes[n])
+
+        axes = {
+            1: ("gas_station_name", "avg_daily_sales"),
+            2: ("gas_station_name", "sales_amount"),
+            3: ("hour_id", "invoice_count"),
+            4: ("payment_method", "invoice_count"),
+            5: ("day_type", "avg_daily_sales"),
+            6: ("employee_name", "invoice_count"),
+            7: ("street", "total_sales"),
+            8: ("gas_station_name", "gasoline_sales"),
+            9: ("date_day", "sales_amount"),
+            10: ("weekday_name", "avg_daily_sales"),
+            11: ("gas_station_name", "difference_liters"),
+            12: ("tank_id", "remaining_pct"),
+            13: ("position", "employee_count"),
+            14: ("gas_station_name", "simulated_fee"),
+            15: ("gas_station_name", "revenue_per_employee"),
+        }
+
+        if df.empty:
+            st.warning("ไม่พบข้อมูลตามเงื่อนไขที่เลือก")
+
+        else:
+            default_x, default_y = axes[n]
+
+            st.caption(
+                "เลือกคอลัมน์จากผลลัพธ์เพื่อเปลี่ยนกราฟได้ "
+                "ตารางด้านล่างแสดงรายละเอียดครบ"
+            )
+
+            columns = list(df.columns)
+
+            x_index = (
+                columns.index(default_x)
+                if default_x in columns
+                else 0
+            )
+
+            x = st.selectbox(
+                "แกนนอน",
+                columns,
+                index=x_index,
+            )
+
+            numeric = list(
+                df.select_dtypes(include="number").columns
+            )
+
+            if numeric:
+
+                y_index = (
+                    numeric.index(default_y)
+                    if default_y in numeric
+                    else 0
                 )
 
-# TAB 3: SQL CONSOLE
-with tab3:
-    st.markdown("#### SQL Query Console")
-    st.caption("Execute read-only SQL queries directly against the DuckDB Data Warehouse instance.")
-    
-    default_sql = f'SELECT * FROM main."{selected_table}" LIMIT 20;' if selected_table != "None" else "SELECT 1;"
-    user_sql = st.text_area("SQL Statement", value=default_sql, height=130)
-    
-    if st.button("Execute Query"):
-        if user_sql.strip():
-            with st.spinner("Executing..."):
-                query_res = run_query(user_sql)
-            if not query_res.empty:
-                st.success(f"Executed successfully. Returned {len(query_res):,} rows.")
-                st.dataframe(query_res, use_container_width=True, hide_index=True)
-            else:
-                st.info("Query executed successfully with 0 records returned.")
+                y = st.selectbox(
+                    "ค่าบนกราฟ",
+                    numeric,
+                    index=y_index,
+                )
+
+                plot = df[[x, y]].copy()
+
+                plot[x] = plot[x].astype(str)
+
+                # ไม่รวม ratio / percentage / average ซ้ำแบบเงียบ ๆ
+                if plot[x].duplicated().any():
+
+                    st.caption(
+                        "มีหลายแถวต่อชื่อแกน "
+                        "จึงใส่ลำดับแถวกำกับเพื่อแสดงแต่ละค่าตาม Grain "
+                        "เลือกสถานีเดียวเพื่ออ่านง่ายขึ้น"
+                    )
+
+                    plot[x] = (
+                        plot[x]
+                        + " · "
+                        + (plot.index + 1).astype(str)
+                    )
+
+                st.bar_chart(
+                    plot.set_index(x),
+                    y=y,
+                )
+
+    # =====================================================
+    # Result table
+    # =====================================================
+    st.dataframe(
+        df,
+        hide_index=True,
+        width="stretch",
+    )
+
+    # -----------------------------------------------------
+    # Download CSV
+    # -----------------------------------------------------
+    st.download_button(
+        "ดาวน์โหลดผลที่กรองแล้ว",
+        df.to_csv(index=False).encode("utf-8-sig"),
+        "dashboard_result.csv",
+        "text/csv",
+    )
+
+    # -----------------------------------------------------
+    # SQL
+    # -----------------------------------------------------
+    with st.expander("SQL ที่คำนวณจาก Dim/Fact"):
+        st.code(
+            sql,
+            language="sql",
+        )

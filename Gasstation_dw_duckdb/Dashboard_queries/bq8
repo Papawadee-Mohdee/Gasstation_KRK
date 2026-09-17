@@ -1,0 +1,11 @@
+with source as (
+    select s.gas_station_id,s.gas_station_name,
+        coalesce(sum(case when p.product_type='Gasoline' then f.sales_amount else 0 end),0) as gasoline_sales,
+        coalesce(sum(case when p.product_type='Diesel' then f.sales_amount else 0 end),0) as diesel_sales
+    from selected_stations s
+    left join selected_sales f using(gas_station_id)
+    left join dim_products p using(product_id) group by 1,2
+)
+select *,gasoline_sales/nullif(diesel_sales,0) as gasoline_to_diesel_ratio,
+    100.0*gasoline_sales/nullif(gasoline_sales+diesel_sales,0) as gasoline_share_pct,
+    100.0*diesel_sales/nullif(gasoline_sales+diesel_sales,0) as diesel_share_pct from source

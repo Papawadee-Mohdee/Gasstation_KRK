@@ -1,0 +1,24 @@
+with sales as (
+    select gas_station_id,gas_station_name,sum(sales_amount) as total_sales,
+        sum(invoice_count) as invoice_count,count(*) as calendar_days
+    from (select s.gas_station_id,s.gas_station_name,s.street,d.date_id,d.date_day,
+d.weekday_number,d.weekday_name,d.day_type,
+coalesce(sum(f.total_amount),0) as sales_amount,count(f.invoice_id) as invoice_count
+from selected_stations s cross join selected_dates d
+left join selected_invoices f on s.gas_station_id=f.gas_station_id and d.date_id=f.date_id
+group by 1,2,3,4,5,6,7,8) group by 1,2
+), staff as (
+    select assigned_gas_station_id as gas_station_id,count(*) as employee_count,
+        sum(case when position='Pump Attendant' then 1 else 0 end) as pump_attendant_count
+    from dim_employees group by 1
+), source as (
+    select s.*,coalesce(e.employee_count,0) as employee_count,
+        coalesce(e.pump_attendant_count,0) as pump_attendant_count,
+        s.total_sales/nullif(e.employee_count,0) as revenue_per_employee,
+        s.invoice_count::double/nullif(e.pump_attendant_count,0) as invoices_per_pump_attendant,
+        s.invoice_count::double/nullif(e.pump_attendant_count*s.calendar_days,0) as daily_invoices_per_pump_attendant
+    from sales s left join staff e using(gas_station_id)
+)
+select *,case when employee_count>0 then dense_rank() over(order by revenue_per_employee desc nulls last) end as productivity_rank,
+    'cannot_assess_without_shifts_and_workload_standard' as staffing_adequacy
+from source

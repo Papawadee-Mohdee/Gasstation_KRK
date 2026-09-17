@@ -1,0 +1,15 @@
+with source as (
+    select *,dense_rank() over(partition by date_id order by sales_amount desc) as highest_rank,
+        dense_rank() over(partition by date_id order by sales_amount) as lowest_rank,
+        max(sales_amount) over(partition by date_id) as highest_sales,
+        min(sales_amount) over(partition by date_id) as lowest_sales
+    from (select s.gas_station_id,s.gas_station_name,s.street,d.date_id,d.date_day,
+d.weekday_number,d.weekday_name,d.day_type,
+coalesce(sum(f.total_amount),0) as sales_amount,count(f.invoice_id) as invoice_count
+from selected_stations s cross join selected_dates d
+left join selected_invoices f on s.gas_station_id=f.gas_station_id and d.date_id=f.date_id
+group by 1,2,3,4,5,6,7,8)
+)
+select *,highest_sales-lowest_sales as sales_gap,
+    highest_sales/nullif(lowest_sales,0) as highest_to_lowest_ratio
+from source where highest_rank=1 or lowest_rank=1
