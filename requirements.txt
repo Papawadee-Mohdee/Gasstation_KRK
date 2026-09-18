@@ -1,3 +1,6 @@
+# Shared environment for the Streamlit dashboard and dbt warehouse.
+# Python 3.12: python3 -m pip install -r requirements.txt
+# Dashboard requirements are included below; no second install is needed.
 agate==1.9.1
 altair==6.3.0
 annotated-types==0.8.0

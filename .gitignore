@@ -1,15 +1,17 @@
 # Python Virtual Environment
 .venv/
 
-.venv-1
+.venv-*/
+venv/
 
 # Python Cache
 __pycache__/
-*.pyc
+*.py[cod]
 
 # dbt Logs
 logs/
 target/
+dbt_packages/
 
 # Operating System Files
 .DS_Store
@@ -20,6 +22,12 @@ Thumbs.db
 
 # Environment Variables
 .env
+.env.*
+!.env.example
+.streamlit/secrets.toml
 
 # Compiled data warehouse (regenerate locally with `dbt run`, or let the app build it from the CSVs)
 Gasstation_dw_duckdb/dev.duckdb
+*.duckdb.wal
+.warehouse-build.lock
+.warehouse-build-*/

@@ -1,6 +1,23 @@
 # Gasstation_KRK
 Project Group1
 
+## เริ่มใช้งานใน GitHub Codespaces (Python 3.12)
+
+สร้าง Codespace จาก branch `krk_gas` ระบบจะสร้าง `.venv` ให้โดยอัตโนมัติ จาก Terminal ที่โฟลเดอร์หลักรัน:
+
+```bash
+source .venv/bin/activate
+python3 -m pip install -r requirements.txt
+streamlit run app.py
+```
+
+เปิดหน้าเว็บจากแท็บ **Ports** ที่พอร์ต **8501** การเปิดแอปครั้งแรกจะนำเข้า CSV ใน `Gasstation_dw_duckdb/Datasets` และรัน dbt เพื่อสร้าง Dim/Fact โดยอัตโนมัติ อาจใช้เวลาหลายนาที ครั้งถัดไปใช้ฐานข้อมูลเดิม หากตั้ง `GASSTATION_DB` แอปจะใช้ฐานข้อมูลนั้นและไม่สร้างทับ
+
+สำหรับ Codespace เดิมหรือเครื่องที่ยังไม่มี `.venv` ให้รัน `python3 -m venv .venv` ก่อน activate หากใช้ `.venv-1` อยู่ ให้รัน `deactivate` ก่อน เปลี่ยน environment ไม่ต้องนำโฟลเดอร์ `.venv` เข้า Git
+
+ใช้ `requirements.txt` ไฟล์เดียวสำหรับทั้ง dashboard และ dbt โดยคงเวอร์ชันเดิมของโปรเจกต์ไว้ หลังเปิด Terminal ใหม่ให้ activate อีกครั้ง ไม่ต้องติดตั้งซ้ำเว้นแต่ dependencies เปลี่ยน
+
+
 # Members
 - 673020045-9 นายประภากร มีใส
 - 673020244-3 นายกิตติพัศ ลาล้ำ

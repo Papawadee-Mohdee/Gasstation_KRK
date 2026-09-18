@@ -1,6 +1,15 @@
 # Dashboard
 
-รันจากโฟลเดอร์หลัก: `python -m pip install -r requirements-dashboard.txt` แล้ว `python -m streamlit run app.py`
+รันจากโฟลเดอร์หลัก (Python 3.12):
+
+```bash
+# Codespace ใหม่สร้าง .venv ให้อัตโนมัติ; เครื่องอื่นรัน python3 -m venv .venv ก่อน
+source .venv/bin/activate
+python3 -m pip install -r requirements.txt
+streamlit run app.py
+```
+
+เปิดพอร์ต 8501 การเปิดครั้งแรกจะนำเข้า CSV และสร้าง Dim/Fact ด้วย dbt โดยอัตโนมัติ แล้วใช้ฐานข้อมูลเดิมในครั้งต่อไป ไม่มีการสร้างทับฐานข้อมูลที่กำหนดผ่าน GASSTATION_DB
 
 แดชบอร์ดอ่าน Dim/Fact โดยตรง ไม่สร้าง mart และไม่ใช้ข้อมูลขายจำลอง แบ่งเป็นยอดขายและพื้นที่ สินค้าและการชำระเงิน ช่วงเวลาและการให้บริการ น้ำมันคงเหลือ พนักงานและประสิทธิภาพ
 
