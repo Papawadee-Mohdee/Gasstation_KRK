@@ -87,16 +87,10 @@ def query(db,stamp,layout,sql,params=()):
         return c.execute(base_sql(layout)+' '+sql,list(params)).fetch_df()
 
 
-def region_mapping(stations,q):
-    path=ROOT/'data/station_region_map.csv'
-    names=set(q("select table_name from information_schema.tables where table_schema='main'").table_name)
-    if {'dim_station_region','dim_region'}<=names:
-        mapping=q('select s.gasstation_key as station_id,r.region_name as region,r.mapping_basis from dim_station_region s join dim_region r using(region_key)')
-    else:
-        mapping=pd.read_csv(path,dtype={'station_id':'int64','region':'string','mapping_basis':'string'})
-    if mapping.station_id.duplicated().any(): raise ValueError('station_region_map.csv มี station_id ซ้ำ')
-    result=stations.merge(mapping,on='station_id',how='left',validate='one_to_one')
-    result['region']=result.region.fillna('ยังไม่จัดกลุ่ม')
+def prepare_stations(stations):
+    result = stations.copy()
+    result['street'] = (result['street'].astype('string').fillna('')
+                        .str.strip().replace('', 'ไม่ระบุสายถนน'))
     return result
 
 
@@ -126,7 +120,7 @@ def main():
     try:
         path,layout=find_database();stamp=path.stat().st_mtime_ns
         q=lambda sql,params=():query(str(path),stamp,layout,sql,tuple(params))
-        stations=region_mapping(q('select * from stations order by station_id'),q)
+        stations=prepare_stations(q('select * from stations order by station_id'))
         bounds=q('select min(date_day) as lo,max(date_day) as hi from invoices').iloc[0]
     except Exception as e:
         st.error(str(e));st.stop()
@@ -136,22 +130,22 @@ def main():
         page=st.radio('เลือกภาพรวม',['ยอดขายและพื้นที่','สินค้าและการชำระเงิน','ช่วงเวลาและการให้บริการ','น้ำมันคงเหลือ','พนักงานและประสิทธิภาพ'])
         dates=st.date_input('ช่วงวันที่',(bounds.lo.date(),bounds.hi.date()),min_value=bounds.lo.date(),max_value=bounds.hi.date())
         if len(dates)!=2: st.info('เลือกวันเริ่มและวันสิ้นสุด');st.stop()
-        selected_regions=st.multiselect('Region — กลุ่มพื้นที่ธุรกิจ',sorted(stations.region.unique()))
-        eligible=stations[stations.region.isin(selected_regions)] if selected_regions else stations
+        selected_streets=st.multiselect('แบ่งตามสายถนน',sorted(stations.street.unique()))
+        eligible=stations[stations.street.isin(selected_streets)] if selected_streets else stations
         ids=st.multiselect('สถานี',eligible.station_id.tolist(),format_func=lambda n:stations.set_index('station_id').loc[n,'station_name'])
         chosen=eligible[eligible.station_id.isin(ids)] if ids else eligible
-        st.caption('ไม่เลือก = ทุกพื้นที่ / ทุกสถานี')
-        st.caption('Region เป็นกลุ่มธุรกิจสมมติ 4 กลุ่มตามรหัสสถานี ไม่ใช่เขตภูมิศาสตร์จริง')
+        st.caption('ไม่เลือก = ทุกสายถนน / ทุกสถานี')
+        st.caption('จัดกลุ่มสถานีตามข้อมูลถนน โดยข้อมูลที่ว่างจะแสดงเป็น ไม่ระบุสายถนน')
     if chosen.empty:st.info('ไม่พบสถานีที่ตรงกับตัวกรอง');st.stop()
     start,end=dates;day_count=(end-start).days+1;station_ids=chosen.station_id.astype(int).tolist()
     args=[start,end,station_ids]
     scope='date_day between ? and ? and station_id in (select unnest(?::integer[]))'
     def invoice_sql(body): return q(body,args)
-    # Aggregate before enriching with station/region to avoid multiplying facts.
+    # Aggregate before enriching with station/street to avoid multiplying facts.
     daily=invoice_sql(f'select station_id,date_day,sum(revenue) as revenue,count(*) as bills from invoices where {scope} group by 1,2')
     grid=pd.MultiIndex.from_product([station_ids,pd.date_range(start,end)],names=['station_id','date_day']).to_frame(index=False)
     daily=grid.merge(daily,on=['station_id','date_day'],how='left').fillna({'revenue':0,'bills':0}).merge(chosen,on='station_id',validate='many_to_one')
-    totals=daily.groupby(['station_id','station_name','region','street'],as_index=False)[['revenue','bills']].sum()
+    totals=daily.groupby(['station_id','station_name','street'],as_index=False)[['revenue','bills']].sum()
     total=float(totals.revenue.sum());bills=int(totals.bills.sum())
     st.title(page)
     st.caption(f'{start:%d/%m/%Y} – {end:%d/%m/%Y} · {day_count} วัน · {len(chosen)} สถานี · หน่วยเงินตามต้นทาง')
@@ -164,14 +158,14 @@ def main():
         plot(px.line(trend,x='date_day',y='revenue',markers=True,labels={'date_day':'วันที่','revenue':'ยอดขาย'}))
         left,right=st.columns(2)
         with left:
-            st.subheader('ยอดขายของแต่ละ Region')
-            regions=totals.groupby('region',as_index=False).agg(revenue=('revenue','sum'),stations=('station_id','count'))
-            regions['per_station']=regions.revenue/regions.stations
-            bars(regions,'region','revenue',hover_data=['stations','per_station'],labels={'region':'กลุ่มพื้นที่ธุรกิจ','revenue':'ยอดขาย','stations':'จำนวนสถานี','per_station':'ยอดขายต่อสถานี'})
+            st.subheader('ยอดขายของแต่ละ สายถนน')
+            roads_summary=totals.groupby('street',as_index=False).agg(revenue=('revenue','sum'),stations=('station_id','count'))
+            roads_summary['per_station']=roads_summary.revenue/roads_summary.stations
+            bars(roads_summary,'street','revenue',hover_data=['stations','per_station'],labels={'street':'สายถนน','revenue':'ยอดขาย','stations':'จำนวนสถานี','per_station':'ยอดขายต่อสถานี'})
         with right:
             st.subheader('สถานีที่สร้างยอดขายสูงสุด')
             top=totals.nlargest(10,'revenue').sort_values('revenue')
-            bars(top,'revenue','station_name','region',orientation='h',labels={'revenue':'ยอดขาย','station_name':'สถานี','region':'Region'})
+            bars(top,'revenue','station_name','street',orientation='h',labels={'revenue':'ยอดขาย','station_name':'สถานี','street':'สายถนน'})
         left,right=st.columns(2)
         with left:
             st.subheader('การกระจายสถานีตามยอดขายเฉลี่ยต่อวัน')
@@ -225,10 +219,10 @@ def main():
             pm=pay.groupby('payment_method',as_index=False).bills.sum()
             plot(px.pie(pm,names='payment_method',values='bills',hole=.6,color_discrete_sequence=COLORS))
         with r:
-            st.subheader('สัดส่วนการชำระเงินในแต่ละ Region')
-            rp=pay.groupby(['region','payment_method'],as_index=False).bills.sum()
-            rp['share']=rp.bills/rp.groupby('region').bills.transform('sum')*100
-            bars(rp,'region','share','payment_method',labels={'region':'Region','share':'สัดส่วนจำนวนบิล (%)','payment_method':'วิธีชำระเงิน'})
+            st.subheader('สัดส่วนการชำระเงินในแต่ละ สายถนน')
+            rp=pay.groupby(['street','payment_method'],as_index=False).bills.sum()
+            rp['share']=rp.bills/rp.groupby('street').bills.transform('sum')*100
+            bars(rp,'street','share','payment_method',labels={'street':'สายถนน','share':'สัดส่วนจำนวนบิล (%)','payment_method':'วิธีชำระเงิน'})
         st.subheader('เงินสดและบัตรเครดิตในแต่ละสถานี')
         pay['share']=pay.bills/pay.groupby('station_id').bills.transform('sum')*100
         bars(pay[pay.station_id.isin(totals.nlargest(15,'bills').station_id)],'station_name','share','payment_method',labels={'station_name':'สถานี','share':'สัดส่วนจำนวนบิล (%)','payment_method':'วิธีชำระเงิน'})
@@ -239,7 +233,7 @@ def main():
         fees=totals.merge(fees,on='station_id',how='left').fillna({'card_sales':0});fees['fee']=fees.card_sales*fee;fees['share']=fees.fee/fees.revenue.replace(0,float('nan'))*100
         bars(fees.nlargest(15,'share'),'station_name','share',hover_data=['fee'],labels={'station_name':'สถานี','fee':'ค่าธรรมเนียมจำลอง','share':'ค่าธรรมเนียมต่อยอดขาย (%)'})
         st.caption('แสดง 15 สถานีที่มีสัดส่วนค่าธรรมเนียมสูงสุด')
-        table(products.merge(chosen[['station_id','station_name','region']],on='station_id'),'ยอดขายสินค้าแยกสถานี')
+        table(products.merge(chosen[['station_id','station_name','street']],on='station_id'),'ยอดขายสินค้าแยกสถานี')
     elif page=='ช่วงเวลาและการให้บริการ':
         hourly=q(f'select station_id,hour,count(*) as bills from invoices where {scope} group by 1,2',args).merge(chosen,on='station_id')
         st.subheader('ชั่วโมงที่มีการออกบิลหนาแน่นที่สุด')
@@ -305,9 +299,9 @@ def main():
         staff=q('select station_id,position,count(*) as staff from employees where station_id in (select unnest(?::integer[])) group by 1,2',[station_ids]).merge(chosen,on='station_id')
         l,r=st.columns(2)
         with l:
-            st.subheader('โครงสร้างตำแหน่งงานในแต่ละ Region')
-            structure=staff.groupby(['region','position'],as_index=False).staff.sum()
-            bars(structure,'region','staff','position',labels={'region':'Region','staff':'จำนวนพนักงาน','position':'ตำแหน่ง'})
+            st.subheader('โครงสร้างตำแหน่งงานในแต่ละ สายถนน')
+            structure=staff.groupby(['street','position'],as_index=False).staff.sum()
+            bars(structure,'street','staff','position',labels={'street':'สายถนน','staff':'จำนวนพนักงาน','position':'ตำแหน่ง'})
         with r:
             st.subheader('พนักงานที่ออกบิลมากที่สุด')
             employees=q(f'''select i.station_id,i.employee_id,e.employee_name,count(*) as bills
@@ -327,10 +321,10 @@ def main():
         l,r=st.columns(2)
         with l:
             st.subheader('ยอดขายต่อพนักงานของแต่ละสถานี')
-            bars(productivity.nlargest(15,'revenue_per_employee').sort_values('revenue_per_employee'),'revenue_per_employee','station_name','region',orientation='h',labels={'revenue_per_employee':'ยอดขายต่อคนในช่วงที่เลือก','station_name':'สถานี'})
+            bars(productivity.nlargest(15,'revenue_per_employee').sort_values('revenue_per_employee'),'revenue_per_employee','station_name','street',orientation='h',labels={'revenue_per_employee':'ยอดขายต่อคนในช่วงที่เลือก','station_name':'สถานี','street':'สายถนน'})
         with r:
             st.subheader('ภาระงานต่อพนักงานเติมน้ำมัน')
-            plot(px.scatter(productivity,x='pump',y='daily_bills_per_pump',size='revenue',color='region',hover_name='station_name',labels={'pump':'จำนวนพนักงานเติมน้ำมัน','daily_bills_per_pump':'บิลเฉลี่ยต่อคนต่อวัน','region':'Region'}))
+            plot(px.scatter(productivity,x='pump',y='daily_bills_per_pump',size='revenue',color='street',hover_name='station_name',labels={'pump':'จำนวนพนักงานเติมน้ำมัน','daily_bills_per_pump':'บิลเฉลี่ยต่อคนต่อวัน','street':'สายถนน'}))
         st.caption('พนักงานเป็นจำนวนคนใน master snapshot ไม่ใช่คนเข้ากะจริง ยังตัดสินความเพียงพอไม่ได้เพราะไม่มีเวลาทำงานและมาตรฐานภาระงาน')
         leaders=employees[employees.bills==employees.groupby('station_id').bills.transform('max')].merge(chosen,on='station_id')
         table(leaders[['station_name','employee_name','bills']],'พนักงานออกบิลสูงสุดของทุกสถานี รวมอันดับเสมอ')

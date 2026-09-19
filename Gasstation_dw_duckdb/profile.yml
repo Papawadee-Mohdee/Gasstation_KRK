@@ -1,7 +1,0 @@
-Gasstation_dw_duckdb:
-  target: dev
-  outputs:
-    dev:
-      type: duckdb
-      path: duckdb/gasstation.duckdb
-      threads: 1
