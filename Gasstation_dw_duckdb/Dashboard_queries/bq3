@@ -1,7 +1,0 @@
-with source as (
-    select s.gas_station_id,s.gas_station_name,h.hour_id,h.time_band,count(i.invoice_id) as invoice_count
-    from selected_stations s cross join dim_hour h
-    left join selected_invoices i on s.gas_station_id=i.gas_station_id and h.hour_id=i.hour_id
-    group by 1,2,3,4
-)
-select *,dense_rank() over(partition by gas_station_id order by invoice_count desc) as peak_rank from source

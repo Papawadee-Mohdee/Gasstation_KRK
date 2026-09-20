@@ -1,7 +1,0 @@
-with source as (
-    select e.assigned_gas_station_id as gas_station_id,s.gas_station_name,e.position,count(*) as employee_count
-    from (select * from dim_employees where assigned_gas_station_id in (select gas_station_id from selected_stations)) e
-    left join selected_stations s on e.assigned_gas_station_id=s.gas_station_id group by 1,2,3
-)
-select *,100.0*employee_count/sum(employee_count) over(partition by gas_station_id) as position_share_pct,
-    dense_rank() over(partition by gas_station_id order by employee_count desc) as position_rank from source

@@ -50,8 +50,7 @@ def prepare_warehouse(find_database):
                 'type': 'duckdb', 'path': str(database), 'threads': 1
             }}}}
             (temp / 'profiles.yml').write_text(yaml.safe_dump(profile), encoding='utf-8')
-            for command, selection in [('seed', 'station_region_map'),
-                                       ('run', 'staging datawarehouse')]:
+            for command, selection in [('run', 'staging datawarehouse')]:
                 result = subprocess.run(
                     [str(dbt), command, '--project-dir', str(PROJECT),
                      '--profiles-dir', str(temp), '--select', *selection.split()],
